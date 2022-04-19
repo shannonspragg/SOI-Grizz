@@ -1,0 +1,453 @@
+---
+title: "Bayes Bear Conflict Regression"
+output: html_document
+author: "Shannon Spragg"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Formatting our Bear Probability of Conflict Regressions:
+
+This document will include the different Bayesian regression models (null and full) for our WARP conflict point only dataframe, measuring the presence of bear conflict against all others (1's = bear report points , 0's = all other species conflict reports).
+
+We produce one primary full model to estimate the probability of bear conflict reports occurring. As we are demonstrating the probability of conflict for just bears, we  include predictors that only pertain to bears which are distance to nearest PA, distance to extant grizzly populations, density of ground crop farming and density of animal farming by CCS region, support for grizzly bear population increase, bear habitat suitability (BHS - based on estimates of grizzly density), a biophysical connectivity map of bear movement, and a varying intercept for CCS region.
+
+Model 1 (null) : logit(p_conflict) = 1 + a[CCS]
+Model 2 (full) : logit(p_conflict) = a[CCS] + B_1*Dist2PA + B_2 * Dist2GrizzPops + B_3 * AnimalFarmDensity + B_4 * GroundCropFarmDensity + B_5 * GrizzIncrease + B_6 * BHS + B_7 * BiophysicalConnectivity + offset[p_general_conflict]
+
+We will use the resulting p(conflict) values to adjust our predictor rasters (multiplying the coefficients by each raster) and combine these rasters into a single raster representing our p(conflict) for bears. We can then compare this predicted probability of bear conflict to the predicted probability of general conflict from our first model.
+
+```{r packages, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(dplyr)
+library(raster)
+library(terra)
+library(tidyverse)
+library(caret)
+library(GGally)
+library(ggplot2)
+library(corrplot)
+library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
+library(rstanarm)
+options(mc.cores = 1)
+library(loo)
+library(projpred)
+SEED=14124869
+library(sjPlot)
+library(nloptr)
+library(sjmisc)
+library(rsq)
+library(tidybayes)
+library(pROC)
+library(bayestestR)
+library(corrplot)
+```
+
+## Bring in Data and Prep Predictors:
+```{r import data, echo=FALSE}
+# Import Data: ------------------------------------------------------------
+# Our just-conflict point data:
+warp.df <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp.final.shp")
+str(warp.df)
+
+# Bring in our P(General Conflict) Raster for Extraction:
+prob.gen.conf.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/prob_general_conf.tif")
+names(prob.gen.conf.rast)[names(prob.gen.conf.rast) == "lyr.1"] <- "Probability of General Conflict"
+```
+
+```{r predictor rasters, echo=FALSE, include=FALSE}
+# Import our Predictor Rasters: -------------------------------------------
+  # Here we bring in all of our predictor rasters for the SOI region:
+
+  # Distance to Nearest Protected Area (km):
+dist2pa.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2pa_SOI_10km.tif" )
+
+  # Dist to Grizzly Populations:
+dist2grizzpop.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2grizz_pop_raster.tif")
+
+  # Animal & Meat Farming Density:
+animal.farming.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/animal_production_density_raster.tif")
+
+  # Ground Crop & Produce Production Density:
+ground.crop.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/ground_crop_density_raster.tif")
+
+  # Grizzinc:
+grizzinc.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/grizz_inc_SOI_10km.tif")
+
+  # Bear Density - Bear Habitat Suitability (BHS):
+bhs.rast <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/bhs_SOI_10km.tif")
+
+  # Biophysical Current Map (Cumulative current flow shows the total current for each landscape pixel):
+biophys.rast <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/biophys_SOI_10km.tif") # use this one
+
+# CCS Region ID:
+ccs.varint.means.rast.co <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/CCS_varint_raster_co.tif")
+names(ccs.varint.means.rast.co)[names(ccs.varint.means.rast.co) == "CCSMean"] <- "CCS Varying Intercept Mean"
+```
+
+```{r extract p(gen conf), echo=FALSE, include=FALSE}
+# Extract P(General Conflict) to WARP Points: -----------------------------
+
+# Check Projections:
+plot(prob.gen.conf.rast)
+plot(warp.df, add=TRUE) # Yup, looks good!
+
+# Here we buffer the WARP points by 5km before extracting the attributes from the current maps
+warp.all.buf <- warp.df %>% 
+  st_buffer(., 5000)
+plot(st_geometry(warp.all.buf)) # Check the buffers
+
+# Need to make points a SpatVector:
+warp.sv <- vect(warp.all.buf)
+
+# Here I will extract the mean values from each raster to the buffered points
+warp.prob.gen.ext <- terra::extract(prob.gen.conf.rast, warp.sv, mean, na.rm = TRUE) 
+
+warp.prob.gen.ext <- terra::extract(p_conf_rast, warp.sv, mean, na.rm = TRUE) # with no inverted rasters
+
+# Create New Column(s) for Extracted Values:
+warp.df$ProbGeneralConf <- warp.prob.gen.ext[,2]
+
+# Check for NA's:
+which(is.na(warp.df$ProbGeneralConf)) #none
+```
+
+```{r scaling variables, echo=FALSE, include=FALSE}
+# Scale the Variables: ----------------------------------------------------------
+scale2sd <-function(variable){(variable - mean(variable, na.rm=TRUE))/(2*sd(variable, na.rm=TRUE))}
+
+dist.2.pa.co <- scale2sd(warp.df$dst__PA)
+animal.farm.dens.co <- warp.df$Anml_Fr
+ground.crop.dens.co <- warp.df$Grnd_Cr
+dist.2.grizzpop.co <- scale2sd(warp.df$dst__GP)
+grizzinc.co <- scale2sd(warp.df$GrizzInc)
+bhs.co <- scale2sd(warp.df$BHS)
+biophys.co <- scale2sd(warp.df$Biophys)
+
+bears_presence_co <- warp.df$bears # Binomial bears
+prob.gen.conf <- warp.df$ProbGeneralConf  # This was already scaled
+
+warp.df$CCSNAME <- as.factor(warp.df$CCSNAME)
+
+CCSNAME.co <- warp.df$CCSNAME
+
+which(is.na(warp.df$CCSNAME.co)) # none
+```
+We we center our predictors by subtracting the means and scale by dividing by two times their standard deviation.
+
+## Producing our Bayesian Model:
+```{r mini df, echo=TRUE}
+# Fit Data for Rstanarm: --------------------------------------------------
+
+# Do this for our conflict only df:
+mini.warp.df.co <- data.frame(bears_presence_co, dist.2.pa.co, dist.2.grizzpop.co, animal.farm.dens.co, ground.crop.dens.co, 
+                              grizzinc.co, bhs.co, biophys.co, CCSNAME.co, prob.gen.conf )
+str(mini.warp.df.co)
+```
+Here we produce a mini data frame that excludes the spatial geometry, but includes all of our critical predictors.
+
+```{r posterior model, echo=TRUE}
+# Fit the Regression: -----------------------------------------------------
+t_prior <- student_t(df = 7, location = 0, scale = 1.5)
+int_prior <- normal(location = 0, scale = NULL, autoscale = FALSE)
+
+# Intercept-only model:
+post.co.int <- stan_glmer(bears_presence_co ~ 1 + (1 | CCSNAME.co), 
+                           data = mini.warp.df.co,
+                           family = binomial(link = "logit"), # define our binomial glm
+                           prior = t_prior, prior_intercept = int_prior, QR=FALSE,
+                           iter = 5000,
+                           seed = SEED, refresh=0) # we add seed for reproducibility
+
+# Our full model + offset for p(general conflict):
+post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + offset(prob.gen.conf), 
+                             data = mini.warp.df.co,
+                             family = binomial(link = "logit"), # define our binomial glm
+                             prior = t_prior, prior_intercept = int_prior, QR=TRUE,
+                             iter = 5000, # Run for enough iterations to avoid errors
+                             seed = SEED, refresh=0) # we add seed for reproducibility
+
+# Save these model objects:
+saveRDS(post.co.offset, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_offset.rds")
+saveRDS(post.co.int, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_int.rds")
+
+# Restore the object
+post.co.offset <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_offset.rds")
+post.co.int <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_int.rds")
+```
+Here we set our initial priors to students t with 7 degrees of freedom, and a scale of 2.5 which is a reasonable default fir prior when coefficients should be close to zero but have some chance of being large. We build our two models using stan_glm to return our posterior distribution for the specified model parameters. Our first model is an intercept only (null) model which only includes our intercept and varying intercepts. It has the simple formula of logit(p_conflict) = conflict_presence ~ 1 + a[CCS]. Model 2, logit(p_conflict) = a[CCS] + B_1 * Dist2PA + B_2 * Dist2GrizzPops + B_3 * AnimalFarming + B_4 * GroundCropFarming + B_5 * GrizzIncrease + B_6 * BHS + B_7 * Biophys + offset[prob.gen.conflict].  
+
+## Run a Variable Correlation Plot:
+```{r corr plot, echo=FALSE}
+# Run Correlation Plot: ---------------------------------------------------
+# Make a correlation matrix for our data dn predictors:
+cor.matrix.df.co <- data.frame(dist.2.pa.co, dist.2.grizzpop.co, animal.farm.dens.co, ground.crop.dens.co, bhs.co, biophys.co, grizzinc.co)
+
+cor.matrix.co <- cor(cor.matrix.df.co)
+round(cor.matrix.co, 2)
+
+# Make a plot with proportional circles on a diagonal, coefficent numbers, and legend at the bottom:
+predictor.cor.plot.co <- corrplot(cor.matrix.co, type = 'lower', order = 'hclust', tl.col = 'black',addCoef.col = 'grey',
+                               cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10))
+```
+We see that there is some correlation between the two agriculture variables. However, if we remove one of these variables from the full model, it does not really impact results at all, so this is not a concern.
+
+## Plot our Mixed Effects & Odds Ratios:
+```{r mixed effects, echo=FALSE}
+# Plotting Mixed Effects: -------------------------------------------------
+
+# Plot the posterior for just fixed effects of our different variables:
+plot_model(post.co.offset, sort.est = TRUE) # This plots just fixed effects
+
+# Posterior with varying intercepts:
+co.offset.plot <- plot(post.co.offset, "areas", prob = 0.95, prob_outer = 1)
+co.offset.plot+ geom_vline(xintercept = 0)
+
+# Basic Mixed Effect Plot:
+sjPlot::plot_model(post.co.offset)
+
+# Labeled Effect Plot:
+# Notes: axis labels should be in order from bottom to top. 
+# To see the values of the effect size and p-value, set show.values and show.p= TRUE
+post.co.offset.effects.plot <- sjPlot::plot_model(post.co.offset, 
+                                         axis.labels=c("Bear Habitat Suitability", "Biophysical Connectivity Map of Bear Corridors", "Grizz Increase", "Ground Crop & Produce Farming Density",
+                                                      "Animal & Meat Farming Density", " Distance to Extant Grizzly Populations", "Distance to Protected Area (km)"),
+                                         show.values=TRUE, show.p=FALSE,
+                                         title="Effects of Social & Environmental Variables on Bear Conflict")
+```
+
+
+## Plot our Area Under the Curve:
+```{r auc, echo=FALSE}
+# Plot our Area Under the Curve: ------------------------------------------
+# Plot ROC for the Full Model Posterior:
+par(pty="s") # sets our graph to square
+roc(bears_presence_co, post.co.offset$fitted.values, plot=TRUE, legacy.axes=TRUE, percent=TRUE ,
+    xlab= "False Positive Percentage", ylab= "True Positive Percentage",
+    col="#377eb8", lwd=4, print.auc=TRUE) # this gives us the ROC curve , in 3544 controls (bears 0) < 2062 cases (bears 1), Area under curve = 0.
+
+# Add ROC curve for our null model:
+plot.roc(bears_presence_co, post.co.int$fitted.values, percent=TRUE, col='#4daf4a', lwd=4, print.auc=TRUE, add=TRUE, print.auc.y=60)
+legend("bottomright", legend=c("Full Bear Conflict Regression", "Null Bear Conflict Regression"),
+       col=c("#377eb8", "#4daf4a"), lwd = 4)
+```
+Comparing the simple pseudo-absence model with the full model in a ROC plot shows that the full model has a 71% discrimination. This indicates that the model predictions are correct 71% of the time, which is better than the null model at 66%.
+
+## Run a Leave-one-out Cross Validation:
+```{r loo, echo=FALSE}
+# Leave-one-out Cross_validation: -----------------------------------------
+# Run a Leave-One-Out (LOO):
+# Loo package implements fast Pareto smoothed leave-one-out-cross-val (PSIS-LOO) to compute expected log predictive density:
+(loo.co.offset <- loo(post.co.offset, save_psis = TRUE))
+
+plot(loo.co.full, label_points = TRUE)
+loo.co.full # get the summary of our test
+
+##### Comparison to Baseline Model: --
+
+# Compute our baseline result without covariates:
+post0.co <- update(post.co.int, formula = bears_presence_co ~ 1 + (1 | CCSNAME.ps), QR = FALSE, refresh=0)
+
+# Compare to our baseline:
+(loo.0.co <- loo(post.co.int)) # computing the PSIS-LOO for our baseline model
+
+loo.comparison.co <- loo_compare(loo.0.co, loo.co.full, loo.co.offset) # this high negative value for post0 shows us the covariates contain clearly useful information for predictions
+loo.comparison.co
+```
+We conduct a leave-one-out cross validation for our three models and then compare them to the zero posterior. Above, we see that the full model and simple model's PSIS-LOO result is reliable as all Pareto k estimates are small (k< 0.5) and the Monte Carlo SE is 0.1 (Vehtari, Gelman and Gabry 2017a). The null model is also reliable as it has a Monte Carlo SE of 0.0 and all Pareto k estimates are small (k< 0.5). Comparing these LOO values to our baseline, we see that the theoretical expected log point wise predictive density (elpd_loo) is lowest for our full model (still lower than the compare model) and highest for our baseline posterior (null model), indicating that the increased covariates in our models contain clearly useful information for predictions.
+
+## Run a K-Fold Cross Validation:
+```{r}
+# K-Fold Cross Validation: ------------------------------------------------
+cv10folds <- kfold_split_stratified(K=10, x=mini.warp.df.ps$dom.farms.ps)
+
+kfold.10.co <- kfold(post.co.offset, K=10, cores = getOption("mc.cores", 1))
+kfold.10.co.int <- kfold(post.co.int, K=10, cores = getOption("mc.cores", 1))
+
+# Save this as data:
+saveRDS(kfold.10.co, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_kfold10.rds")
+saveRDS(kfold.10.co.int, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_int_kfold10.rds")
+
+# Recover the k-fold results:
+kfold.10.co <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_kfold10.rds")
+
+kfold.10.co
+```
+
+## Prep CCS Varying Intercepts:
+```{r ccs intercepts, echo=FALSE}
+## Make CCS Varying Intercept Raster: ----------------------------------------------------------
+
+soi.ccs.crop <- st_read( "/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_CCS_10km.shp")
+# Bring in one of our rasters for rasterizing polygon data later:
+soi.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km.tif") # SOI Region 10km
+
+# Reproject the Data:
+soi.ccs.reproj <- st_make_valid(soi.ccs.crop) %>% 
+  st_transform(crs=crs(soi.rast))
+
+# Check to see if they match:
+st_crs(warp.df) == st_crs(soi.ccs.reproj) # [TRUE] 
+
+# Extracting CCS Varying Intercept from Posterior: ------------------------
+
+# Need to make the ranef(post.pa.full) into a dataframe and join by CCS name to our warp.pres.abs:
+varying.int.means.co <- as.data.frame(ranef(post.co.offset))
+vary.int.subset.co <- varying.int.means.co[ , c("grp", "condval")]
+
+# Join the tab data with spatial:  
+ccs.varint.join.co <- merge(soi.ccs.crop, vary.int.subset.co, by.x = "CCSNAME", by.y = "grp")
+
+# Now that it's spatial, do a spatial join to assign a varying intercept mean to each point:
+warp.varint.join.co <- st_join(warp.df, left = TRUE, ccs.varint.join.co) # join points
+
+# Clean this up
+warp.varint.join.co$PRNAME <- NULL
+warp.varint.join.co$PRNTCDVSNC <- NULL
+warp.varint.join.co$PRUID <- NULL
+warp.varint.join.co$CDUID <- NULL
+warp.varint.join.co$CPRVNCCD <- NULL
+warp.varint.join.co$FTRCD <- NULL
+warp.varint.join.co$CPRVNCCD <- NULL
+warp.varint.join.co$PRNTCDVSNC <- NULL
+warp.varint.join.co$FFCTVDT <- NULL
+warp.varint.join.co$XPRDT <- NULL
+warp.varint.join.co$OBJECTID <- NULL
+warp.varint.join.co$AREA_SQM <- NULL
+warp.varint.join.co$FEAT_LEN <- NULL 
+warp.varint.join.co$CDNAME <- NULL
+warp.varint.join.co$CDTYPE <- NULL
+warp.varint.join.co$CPRVNCNM <- NULL
+warp.varint.join.co$CCSNAME.y <- NULL
+warp.varint.join.co$CCSUID.y <- NULL
+warp.varint.join.co$CCSUID_ <- NULL
+
+# Rename these quick:
+names(warp.varint.join.co)[names(warp.varint.join.co) == "CCSNAME.x"] <- "CCSNAME"
+names(warp.varint.join.co)[names(warp.varint.join.co) == "CCSUID.x"] <- "CCSUID"
+names(warp.varint.join.co)[names(warp.varint.join.co) == "condval"] <- "CCS_Varying_Int"
+
+# Make our CCS Raster: ----------------------------------------------------
+# Make these spatvectors:
+soi.ccs.sv <- vect(soi.ccs.reproj)
+warp.co.sv <- vect(warp.varint.join.co)
+
+# Make our CCS Post Mean Raster: ------------------------------------------
+soi.ccs.rast <- terra::rasterize(soi.ccs.sv, soi.rast, field = "CCSNAME")
+
+# Make Raster for our Posterior Means for CCS Varying Intercept: ---------------------
+varint.means.rast.co <- terra::rasterize(warp.co.sv, soi.rast, field = "CCS_Varying_Int")
+names(varint.means.rast.co)[names(varint.means.rast.co) == "OBJECTID"] <- "CCS Varying Intercept Mean Estimate"
+
+# Extract Values of Posterior Means to CCS regions: 
+warp.varint.mean.ext.co <- terra::extract(varint.means.rast.co, soi.ccs.sv, mean, na.rm = TRUE) 
+
+# Create New Column(s) for Extracted Values:
+soi.ccs.sv$CCSMean <- warp.varint.mean.ext.co[,2] 
+
+# Make our CCS Post Mean Raster: ------------------------------------------
+ccs.varint.means.rast.co <- terra::rasterize(soi.ccs.sv, soi.rast, field = "CCSMean")
+names(ccs.varint.means.rast.co)[names(ccs.varint.means.rast.co) == "CCStMean"] <- "CCS Varying Intercept Means"
+
+# Check this:
+plot(ccs.varint.means.rast) 
+
+# Save our CCS Post Means Raster: -----------------------------------------
+terra::writeRaster(ccs.varint.means.rast.co, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/CCS_varint_raster_co.tif" )
+```
+
+
+```{r scale predictor rasters, echo=FALSE}
+# Scale our Predictor Rasters: --------------------------------------------
+# Here we create a function to scale by subtracting the mean and dividing by 2 standard deviations:
+scale2sd.raster <-function(variable){(variable - global(variable, "mean", na.rm=TRUE)[,1])/(2*global(variable, "sd", na.rm=TRUE)[,1])}
+
+# We can also do this Step by Step:
+
+# Distance to PA:
+d2pa.mean.co <- mean(warp.df$dst__PA)
+d2pa.sub.mean.co <- dist2pa.rast - d2pa.mean.co
+d2pa.sd.co <- sd(warp.df$dst__PA)
+dist2pa.rast.co.sc <- d2pa.sub.mean.co / ( 2 * d2pa.sd.co)
+
+# Distance to Grizzly Pops:
+d2grizz.mean.co <- mean(warp.df$dst__GP)
+d2grizz.sub.mean.co <- dist2grizzpop.rast - d2grizz.mean.co
+d2grizz.sd.co <- sd(warp.df$dst__GP)
+dist2grizzpop.rast.co.sc <- d2grizz.sub.mean.co / ( 2 * d2grizz.sd.co)
+
+# Animal Farm Density:
+animal.farm.mean.co <- mean(warp.df$Anml_Fr)
+anim.f.sub.mean.co <- animal.farming.rast - animal.farm.mean.co
+anim.f.sd.co <- sd(warp.df$Anml_Fr)
+animal.farm.rast.co.sc <- anim.f.sub.mean.co / ( 2 * anim.f.sd.co)
+
+# Ground Crop Density:
+ground.crop.mean.co <- mean(warp.df$Grnd_Cr)
+ground.c.sub.mean.co <- ground.crop.rast - ground.crop.mean.co
+ground.c.sd.co <- sd(warp.df$Grnd_Cr)
+ground.crop.rast.co.sc <- ground.c.sub.mean.co / ( 2 * ground.c.sd.co)
+
+# Grizz Increase:
+grizzinc.mean.co <- mean(warp.df$GrizzInc)
+grizz.sub.mean.co <- grizzinc.rast - grizzinc.mean.co
+grizzinc.sd.co <- sd(warp.df$GrizzInc)
+grizzinc.rast.co.sc <- grizz.sub.mean.co / ( 2 * grizzinc.sd.co)
+
+# Biophys:
+biophys.mean.co <- mean(warp.df$Biophys)
+bio.sub.mean.co <- biophys.rast - biophys.mean.co
+biophys.sd.co <- sd(warp.df$Biophys)
+biophys.rast.co.sc <- bio.sub.mean.co / ( 2 * biophys.sd.co)
+
+# BHS:
+bhs.mean.co <- mean(warp.df$BHS)
+bhs.sub.mean.co <- bhs.rast - bhs.mean.co
+bhs.sd.co <- sd(warp.df$BHS)
+bhs.rast.co.sc <- bhs.sub.mean.co / ( 2 * bhs.sd.co)
+
+# We don't need to scale the categorical rasters, CCS raster or the p(general conflict) raster
+```
+Here, we scale our predictor rasters just like we scaled our variables. We scale each raster by the corresponding predictor value for mean and standard deviation that the predictor variable data was scaled with.
+
+
+## Create our P(Bear Conflict) Raster:
+
+Here we use the coefficients resulting from the above full regression to preform raster math (coeff_1 * predictor raster + coeff_2 * predictor raster + ...) to create one condensed raster representing the probability of bear conflict.
+```{r p(bear conflict), echo=FALSE}
+# Produce our P(Bear Conflict) Raster: ------------------------------------
+
+# Make sure extents match:
+ext(grizzinc.rast.co.sc) == ext(bhs.rast.co.sc) # TRUE
+ext(biophys.rast.co.sc) == ext(animal.farm.rast.co.sc) #TRUE
+ext(animal.farm.rast.co.sc) == ext(ground.crop.rast.co.sc) #TRUE
+
+# View our Full Model Coefficients:
+summary(post.co.offset)
+fixef(post.co.offset)
+
+# Stack these spatrasters:
+bear.conf.rast.stack <- c(grizzinc.rast.co.sc, bhs.rast.co.sc, biophys.rast.co.sc, dist2pa.rast.co.sc, dist2grizzpop.rast.co.sc, animal.farm.rast.co.sc, ground.crop.rast.co.sc, ccs.varint.means.rast.co)
+plot(bear.conf.rast.stack) # plot these all to check
+
+# Create P(all conflict) raster with our regression coefficients and rasters:
+
+# Our full model with general conflict offset:
+bear_conf_offset_rast <- -1.2012335 + ccs.varint.means.rast.co + (0.1940000 * dist2pa.rast.co.sc) + (0.8533170  * grizzinc.rast.co.sc) + (0.4597530 * biophys.rast.co.sc) + ( -0.2396923 * bhs.rast.co.sc) + (-0.4936497 * dist2grizzpop.rast.co.sc) + (-1.1418043 * animal.farm.rast.co.sc) + 
+  ( 2.7521941 * ground.crop.rast.co.sc) 
+
+# Convert the Raster to the Probability Scale:
+p_BEAR_conf_offset_rast <- app(bear_conf_offset_rast, fun=plogis)
+
+plot(p_BEAR_conf_offset_rast) # Our p(bear conflict) with offset for general conflict
+```
+
+```{r write raster, echo=FALSE, include=FALSE}
+# Save our P(Bear Conflict) Raster:
+terra::writeRaster(p_BEAR_conf_offset_rast, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/prob_bear_conflict.tif")
+```
+
