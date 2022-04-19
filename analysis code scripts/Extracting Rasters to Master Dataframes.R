@@ -17,31 +17,31 @@ library(rgdal)
 
 # Bring in Data: ----------------------------------
   # Our WARP points master df:
-warp.all.sp <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp.master.shp")
+warp.all.sp <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp.master.shp")
   # Our pres-abs ponts master df:
-pres.abs.master <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/pres.abs.master.shp")
+pres.abs.master <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/pres.abs.master.shp")
 
   # Predictor Rasters:
-biophys.cum.curmap <- rast("/Users/shannonspragg/ONA_grizz_Matt/data/processed/output/biophys_CS/cum_currmap.tif") # use this one
+biophys.cum.curmap <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/cum_currmap.tif") # use this one
   # Cumulative current flow shows the total current for each landscape pixel
   # Normalized shows the degree to which a pixel has more or less current than expected under resistance-free conditions (cumulative current flow divided by flow potential)
 
   # Just survey response layer (not CS):
-grizz.inc.rast <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/original/Grizz Increase/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
+grizz.inc.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
 
   # responded “I would like to see grizzlies increase or increase substantially” in response to “how would you like to see grizzly 
   # populations respond in the next several years?” 
 
   # BHS layer:
-grizz.dens <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/original/Grizz Density/grizz_dens.tif") # Estimated grizzly density for the region
+grizz.dens <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/grizz_dens.tif") # Estimated grizzly density for the region
 plot(grizz.dens)
 
   # SOI Boundary and Raster for template:
-soi.10k.boundary <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km_buf.shp")
-soi.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
+soi.10k.boundary <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km_buf.shp")
+soi.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
 
  # Human Density for SOI:
-hm.dens <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/human_dens.tif") # SOI Region 10km
+hm.dens <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens.tif") # SOI Region 10km
 
 
 # Check / Set CRS for Raster and Points -----------------------------------
@@ -176,6 +176,6 @@ pres.abs.reproj <- pres.abs.reproj %>% drop_na(Human_Dens)
 
 # Save this as new file ---------------------------------------------------
 
-st_write(warp.reproj, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp.final.shp")
-st_write(pres.abs.reproj, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/pres.abs.final.shp")
+st_write(warp.reproj, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp.final.shp")
+st_write(pres.abs.reproj, "/Users/shannonspragg/SOI-Grizz/Data/processed/pres.abs.final.shp")
 
