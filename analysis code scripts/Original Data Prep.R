@@ -41,8 +41,6 @@ farm.type <- read.csv("/Users/shannonspragg/SOI-Grizz/Data/original/farm type_32
 can.ccs.shp<-st_read("/Users/shannonspragg/SOI-Grizz/Data/original/lccs000b16a_e.shp")
   # Global Human Density:
 world.hum.dens <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_1_deg.tif")
-   # BC Provincial & National Parks:
-bc.PAs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/Parks_Combined2.shp")
   # Grizzly Population Units:
 grizz.units <- st_read("/Users/shannonspraggSOI-Grizz/Data/original/GBPU_BC_polygon.shp")
   # Grizz Inc:
@@ -77,9 +75,6 @@ str(warp.all.sp)
 # Filter down to Southern Interior Ecoprovince: ---------------------------
   # Here we select for just the southern interior province
 south.interior.ep <- bc.ecoprovs %>% filter(bc.ecoprovs$CPRVNCNM == "SOUTHERN INTERIOR")
-
-  # Write this for later use:
-#st_write(south.interior.ep, "/Users/shannonspragg/ONA_GRIZZ/CAN Spatial Data/BC Ecoprovinces/south.interior.shp")
 
 
 # Check Projections: ------------------------------------------------------
@@ -146,7 +141,6 @@ st_write(warp.crop.10k, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp_crop
 
 ####################### Now, we will filter the CCS regions and Agriculture Data to BC:
 
-
 # Filter CCS and Ag Files to BC Only ---------------------------------------------------
   # Make sf and filter down to only British Columbia for Census SubDivs (CCS):
 can.ccs.sf<- as(can.ccs.shp, "sf")
@@ -195,8 +189,8 @@ farm.ccs.join <- merge(bc.farm.2016.ccs, bc.ccs, by.x = "CCSUID.crop", by.y = "C
 farm.ccs.sf <- st_as_sf(farm.ccs.join)
 head(farm.ccs.sf) # Here we have a farm type data frame with Multi-polygon geometry - check!
 
-######################## Here, we calculate the denisty of farms in the region:
 
+######################## Here, we calculate the denisty of farms in the region:
 
 # Here we subset the farm data to SOI, and pull out the total farm counts: ---------------------------------
 

@@ -19,36 +19,36 @@ library(measurements)
 
 # Bring in the Points Data -------------------------------
   #  WARP SOI 10km Buffer Data:
-warp.all<-st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp_crop_10km_buf.shp") 
+warp.all<-st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp_crop_10km_buf.shp") 
 head(warp.all)
   # Bring in our pres abs data frame to get variables for our absences:
-warp.pres.abs <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp_pres.abs.shp")
+warp.pres.abs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp_pres.abs.shp")
 
 
 # Bring in the Variable Data -----------------
   # Our SOI 10km Buffered Boundary:
-soi.10k.boundary <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km_buf.shp")
+soi.10k.boundary <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km_buf.shp")
   # Filtered BC Protected Areas:
-bc.PAs <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/original/CAN Protected Areas/Parks_Combined2.shp") # Clayton's data
+bc.PAs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/Parks_Combined2.shp") # Clayton's data
 
   # BC Metropolitan Areas:
-bc.metro<-st_read("/Users/shannonspragg/ONA_GRIZZ/Data/original/BC Metro Areas/CNCNSSMTRR_polygon.shp")
+bc.metro<-st_read("/Users/shannonspragg/SOI-Grizz/Data/original/CNCNSSMTRR_polygon.shp")
 str(bc.metro) # check this
 
   # Animal Product & Meat Farming:
-animal.prod.sf <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/Animal Product Farming.shp")
+animal.prod.sf <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp")
   # Ground Crop & Produce Production:
-ground.crop.sf <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/Ground Crop Production.shp")
+ground.crop.sf <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp")
 
   # BC CCS Regions:
-bc.ccs<-st_read("//Users/shannonspragg/ONA_GRIZZ/Data/processed/BC CCS.shp")
+bc.ccs<-st_read("//Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp")
 str(bc.ccs)
 
   # Extent Grizzly Populations:
-extent.grizz <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/Extent Grizzly Pop Units.shp")
+extent.grizz <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Extent Grizzly Pop Units.shp")
 
   # SOI Raster for rasterizing later:
-soi.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
+soi.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
 
 
 # Reproject All Data ------------------------------------------------------
@@ -232,8 +232,8 @@ names(ground.crop.rast)[names(ground.crop.rast) == "Frms___"] <- "Density of Gro
 
 
   # Save these Farm Rasters:
-terra::writeRaster(animal.prod.rast, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/animal_production_density_raster.tif")
-terra::writeRaster(ground.crop.rast, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/ground_crop_density_raster.tif" )
+terra::writeRaster(animal.prod.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
+terra::writeRaster(ground.crop.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif" )
 
 
 
@@ -322,7 +322,7 @@ plot(st_geometry(soi.ccs.crop))
 plot(st_geometry(bears.reproj), add=TRUE)
 
   # Write this as a .shp for later:
-st_write(soi.ccs.crop, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_CCS_10km.shp")
+st_write(soi.ccs.crop, "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_CCS_10km.shp")
 
 # Assign the WARP Points to a CCS Region: ---------------------------------
   ## Here we want to overlay the points with the regions, adding a column in the warp data that is CCS region ID, 
@@ -403,6 +403,6 @@ pres.abs.ccs.join <- pres.abs.dropped
 
 # WARP All Species Master Data Frame --------------------------------------
   # Save the resulting data frames here:
-st_write(warp.ccs.join, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp.master.shp")
-st_write(pres.abs.ccs.join, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/pres.abs.master.shp")
+st_write(warp.ccs.join, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp.master.shp")
+st_write(pres.abs.ccs.join, "/Users/shannonspragg/SOI-Grizz/Data/processed/pres.abs.master.shp")
 
