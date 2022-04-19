@@ -51,11 +51,11 @@ library(corrplot)
 ```{r import data, echo=FALSE}
 # Import Data: ------------------------------------------------------------
 # Our just-conflict point data:
-warp.df <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp.final.shp")
+warp.df <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp.final.shp")
 str(warp.df)
 
 # Bring in our P(General Conflict) Raster for Extraction:
-prob.gen.conf.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/prob_general_conf.tif")
+prob.gen.conf.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/prob_general_conf.tif")
 names(prob.gen.conf.rast)[names(prob.gen.conf.rast) == "lyr.1"] <- "Probability of General Conflict"
 ```
 
@@ -64,28 +64,28 @@ names(prob.gen.conf.rast)[names(prob.gen.conf.rast) == "lyr.1"] <- "Probability 
   # Here we bring in all of our predictor rasters for the SOI region:
 
   # Distance to Nearest Protected Area (km):
-dist2pa.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2pa_SOI_10km.tif" )
+dist2pa.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/dist2pa_SOI_10km.tif" )
 
   # Dist to Grizzly Populations:
-dist2grizzpop.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2grizz_pop_raster.tif")
+dist2grizzpop.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/dist2grizz_pop_raster.tif")
 
   # Animal & Meat Farming Density:
-animal.farming.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/animal_production_density_raster.tif")
+animal.farming.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
 
   # Ground Crop & Produce Production Density:
-ground.crop.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/ground_crop_density_raster.tif")
+ground.crop.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif")
 
   # Grizzinc:
-grizzinc.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/grizz_inc_SOI_10km.tif")
+grizzinc.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/grizz_inc_SOI_10km.tif")
 
   # Bear Density - Bear Habitat Suitability (BHS):
-bhs.rast <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/bhs_SOI_10km.tif")
+bhs.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/processed/bhs_SOI_10km.tif")
 
   # Biophysical Current Map (Cumulative current flow shows the total current for each landscape pixel):
-biophys.rast <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/biophys_SOI_10km.tif") # use this one
+biophys.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/processed/biophys_SOI_10km.tif") # use this one
 
 # CCS Region ID:
-ccs.varint.means.rast.co <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/CCS_varint_raster_co.tif")
+ccs.varint.means.rast.co <- rast("/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster_co.tif")
 names(ccs.varint.means.rast.co)[names(ccs.varint.means.rast.co) == "CCSMean"] <- "CCS Varying Intercept Mean"
 ```
 
@@ -172,12 +172,12 @@ post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.
                              seed = SEED, refresh=0) # we add seed for reproducibility
 
 # Save these model objects:
-saveRDS(post.co.offset, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_offset.rds")
-saveRDS(post.co.int, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_int.rds")
+saveRDS(post.co.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
+saveRDS(post.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
 
 # Restore the object
-post.co.offset <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_offset.rds")
-post.co.int <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_int.rds")
+post.co.offset <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
+post.co.int <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
 ```
 Here we set our initial priors to students t with 7 degrees of freedom, and a scale of 2.5 which is a reasonable default fir prior when coefficients should be close to zero but have some chance of being large. We build our two models using stan_glm to return our posterior distribution for the specified model parameters. Our first model is an intercept only (null) model which only includes our intercept and varying intercepts. It has the simple formula of logit(p_conflict) = conflict_presence ~ 1 + a[CCS]. Model 2, logit(p_conflict) = a[CCS] + B_1 * Dist2PA + B_2 * Dist2GrizzPops + B_3 * AnimalFarming + B_4 * GroundCropFarming + B_5 * GrizzIncrease + B_6 * BHS + B_7 * Biophys + offset[prob.gen.conflict].  
 
@@ -269,11 +269,11 @@ kfold.10.co <- kfold(post.co.offset, K=10, cores = getOption("mc.cores", 1))
 kfold.10.co.int <- kfold(post.co.int, K=10, cores = getOption("mc.cores", 1))
 
 # Save this as data:
-saveRDS(kfold.10.co, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_kfold10.rds")
-saveRDS(kfold.10.co.int, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_int_kfold10.rds")
+saveRDS(kfold.10.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
+saveRDS(kfold.10.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
 
 # Recover the k-fold results:
-kfold.10.co <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_co_kfold10.rds")
+kfold.10.co <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
 
 kfold.10.co
 ```
@@ -282,9 +282,9 @@ kfold.10.co
 ```{r ccs intercepts, echo=FALSE}
 ## Make CCS Varying Intercept Raster: ----------------------------------------------------------
 
-soi.ccs.crop <- st_read( "/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_CCS_10km.shp")
+soi.ccs.crop <- st_read( "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_CCS_10km.shp")
 # Bring in one of our rasters for rasterizing polygon data later:
-soi.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km.tif") # SOI Region 10km
+soi.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif") # SOI Region 10km
 
 # Reproject the Data:
 soi.ccs.reproj <- st_make_valid(soi.ccs.crop) %>% 
@@ -357,7 +357,7 @@ names(ccs.varint.means.rast.co)[names(ccs.varint.means.rast.co) == "CCStMean"] <
 plot(ccs.varint.means.rast) 
 
 # Save our CCS Post Means Raster: -----------------------------------------
-terra::writeRaster(ccs.varint.means.rast.co, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/CCS_varint_raster_co.tif" )
+terra::writeRaster(ccs.varint.means.rast.co, "/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster_co.tif" )
 ```
 
 
@@ -448,6 +448,6 @@ plot(p_BEAR_conf_offset_rast) # Our p(bear conflict) with offset for general con
 
 ```{r write raster, echo=FALSE, include=FALSE}
 # Save our P(Bear Conflict) Raster:
-terra::writeRaster(p_BEAR_conf_offset_rast, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/prob_bear_conflict.tif")
+terra::writeRaster(p_BEAR_conf_offset_rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/prob_bear_conflict.tif")
 ```
 
