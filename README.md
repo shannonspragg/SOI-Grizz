@@ -29,9 +29,9 @@ In this script, we bring in the rasters for each of our predictors and ensure th
 
 
 
-############## Bayes Pseudo-Abs Regression.R #####################
+############## Bayes Pseudo-Abs Regs.Rmd #####################
 This script is where we bring in our pres-abs master data frame and run a series of Bayesian regressions with individual and combined covariates from the variable columns that we produced above. Here we run individual and full models, run model comparisons, validation processes, and produce our probability of general conflict raster.
 
 
-############## Conflict Bears Bayes Regression.R #####################
+############## Bayes Bear Conflict Regs.Rmd #####################
 This script is where we bring in our warp-only master data frame and run a series of Bayesian regressions with individual and combined covariates from the variable columns that we produced above. Here we run individual and full models, run model comparisons, validation processes, and produce our probability of bear conflict raster.
