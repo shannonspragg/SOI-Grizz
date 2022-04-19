@@ -46,7 +46,6 @@ library(rsq)
 library(tidybayes)
 library(pROC)
 library(bayestestR)
-#install.packages("brms")
 library(brms)
 library(corrplot)
 ```
@@ -55,13 +54,32 @@ library(corrplot)
 ```{r data, echo=FALSE}
 # Import Data: ------------------------------------------------------------
 # Here we have our presence-absence data:
-warp.pres.abs <- st_read("/Users/shannonspragg/ONA_GRIZZ/Data/processed/pres.abs.final.shp")
+warp.pres.abs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/pres.abs.final.shp")
 head(warp.pres.abs)
-
-# Access this via googledrive: In our ONA-GRIZZ folder
-# at the link: https://drive.google.com/drive/u/0/folders/17n64UwIiwhGVCwTQX8uc31ybWJ0YIdtv
 ```
 
+
+```{r bring in data 2, echo=FALSE, include=FALSE}
+# Here we bring in all of our predictor rasters for the SOI region:
+  # link to data here:   https://drive.google.com/drive/u/0/folders/1T60Al9vHOF-E7ftKzvzN2CMUyF1agC-l
+
+  # Distance to Neartest Protected Area (km):
+dist2pa.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/dist2pa_SOI_10km.tif" )
+#dist2pa.inv.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2pa_Sinvert_raster.tif" )
+
+  # Distance to Nearest Metro Area (km):
+dist2met.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/dist2metro_raster.tif" )
+#dist2met.inv.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2metro_invert_raster.tif" )
+
+  # Animal & Meat Farming Density:
+animal.farming.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
+
+  # Ground Crop & Produce Production Density:
+ground.crop.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif")
+
+  # Human Pop Density (by sq km):
+hm.dens.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens_SOI_10km.tif") # SOI Region 10km
+```
 
 ```{r scale pres-abs variables, echo=FALSE}
 # Scale the Variables: ----------------------------------------------------------
@@ -120,11 +138,11 @@ summary(post.int.onlny)
 summary(post.pa.full)
 
 # Save an object to a file
-saveRDS(post.pa.full, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_pa_full.rds")
-saveRDS(post.int.only, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_pa_int.rds")
+saveRDS(post.pa.full, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_full.rds")
+saveRDS(post.int.only, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_int.rds")
 
-post.pa.full <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_pa_full.rds")
-post.int.only <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_pa_int.rds")
+post.pa.full <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_full.rds")
+post.int.only <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_int.rds")
 
 plot_model(post.pa.full, sort.est = TRUE)
 
@@ -246,18 +264,18 @@ kfold.10.ps.int <- kfold(post.int.only, K=10, cores = getOption("mc.cores", 1))
 cv10folds.ccs <- kfold_split_stratified(K=10, x=mini.warp.df.ps$CCSNAME.ps)
 
 # Save this as data:
-saveRDS(kfold.10.ps, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_pa_kfold10.rds")
-saveRDS(kfold.10.ps.int, file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_pa_kfold10_int.rds")
+saveRDS(kfold.10.ps, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10.rds")
+saveRDS(kfold.10.ps.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10_int.rds")
 
-kfold.10.ps <- readRDS(file = "/Users/shannonspragg/ONA_GRIZZ/Data/processed/post_pa_kfold10.rds")
+kfold.10.ps <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10.rds")
 ```
 
 ## Create our Varying Intercept Raster
 ```{r varying intercept raster, echo=FALSE}
 # Bring in Data: ----------------------------------------------------------
-soi.ccs.crop <- st_read( "/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_CCS_10km.shp")
+soi.ccs.crop <- st_read( "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_CCS_10km.shp")
   # Bring in one of our rasters for rasterizing polygon data later:
-soi.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km.tif") # SOI Region 10km
+soi.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif") # SOI Region 10km
 
 # Reproject the Data:
 soi.ccs.reproj <- st_make_valid(soi.ccs.crop) %>% 
@@ -330,36 +348,10 @@ names(soi.ccs.rast)[names(soi.ccs.rast) == "PostMean"] <- "CCS Varying Intercept
 plot(ccs.varint.means.rast) 
 
 # Save our CCS Post Means Raster: -----------------------------------------
-terra::writeRaster(ccs.varint.means.rast, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/CCS_varint_raster.tif" )
-ccs.varint.means.rast <- rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/CCS_varint_raster.tif")
+terra::writeRaster(ccs.varint.means.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster.tif" )
+ccs.varint.means.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster.tif")
 ```
 
-
-## Bring in Predictor Rasters:
-```{r bring in data 2, echo=FALSE, include=FALSE}
-# Here we bring in all of our predictor rasters for the SOI region:
-  # link to data here:   https://drive.google.com/drive/u/0/folders/1T60Al9vHOF-E7ftKzvzN2CMUyF1agC-l
-
-  # Distance to Neartest Protected Area (km):
-dist2pa.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2pa_SOI_10km.tif" )
-#dist2pa.inv.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2pa_Sinvert_raster.tif" )
-
-  # Distance to Nearest Metro Area (km):
-dist2met.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2metro_raster.tif" )
-#dist2met.inv.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2metro_invert_raster.tif" )
-
-  # Animal & Meat Farming Density:
-animal.farming.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/animal_production_density_raster.tif")
-
-  # Ground Crop & Produce Production Density:
-ground.crop.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/ground_crop_density_raster.tif")
-
-  # Human Pop Density (by sq km):
-hm.dens.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/human_dens_SOI_10km.tif") # SOI Region 10km
-
-  # CCS Region ID:
-ccs.varint.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/CCS_varint_raster.tif" )
-```
 
 ## Scale Predictor Rasters:
 ```{r scale our variables, echo=FALSE}
@@ -430,7 +422,7 @@ We use raster math calculations to apply the regression coefficients to each cor
 
 ```{r write raster}
 # Save our P(General Conflict) Raster:
-terra::writeRaster(p_conf_rast, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/prob_general_conf_inv.tif")
+terra::writeRaster(p_conf_rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/prob_general_conf_inv.tif")
 ```
 Next, we can extract the values of this raster to our original warp conflict report data frame (1's = bears, 0's = other species reports), to use the p(general conlfict) as a predictor in the second Bayes model of bear conflict.
 
