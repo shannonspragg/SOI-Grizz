@@ -104,7 +104,7 @@ plot(st_geometry(south.int.10k.buf))
 plot(st_geometry(south.interior.ep), add= TRUE) # Here we see it with a 10k buffer
 
   # Save this buffered SOI Boundary:
-st_write(south.int.10k.buf, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km_buf.shp")
+st_write(south.int.10k.buf, "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km_buf.shp")
 
   # Make our SOI template raster:
 soi.vect <- vect(south.int.10k.buf)
@@ -118,7 +118,7 @@ soi.rast[soi.rast == 327] <- 0
 
 
 # Export as tiff:
-terra::writeRaster(soi.rast, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/SOI_10km.tif")
+terra::writeRaster(soi.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif")
 
   # Reports Within a 10k Buffer: 
   # Let's check how many total and just bear reports we include with a 10k buffer:
@@ -141,7 +141,7 @@ warp.crop.10k$AREA_SQM <- NULL
 warp.crop.10k$FEAT_LEN <- NULL
 
 # Save our Cropped WARP DF ------------------------------------------------
-st_write(warp.crop.10k, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/warp_crop_10km_buf.shp")
+st_write(warp.crop.10k, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp_crop_10km_buf.shp")
 
 
 ####################### Now, we will filter the CCS regions and Agriculture Data to BC:
@@ -158,7 +158,7 @@ bc.ccs<-can.ccs.sf %>%
   st_make_valid()
   
 # Save this for later:
-st_write(bc.ccs, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/BC CCS.shp")
+st_write(bc.ccs, "/Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp")
 
 
 # Filter the Ag Files down to just BC districts: --------------------------
@@ -267,9 +267,9 @@ ground.crop.sf$Farms_per_sq_km <- as.numeric(as.character(ground.crop.sf$Farms_p
 
 
   # Save these as .shp's for later:
-st_write(animal.prod.sf,"/Users/shannonspragg/ONA_GRIZZ/Data/processed/Animal Product Farming.shp")
+st_write(animal.prod.sf,"/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp")
 
-st_write(ground.crop.sf, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/Ground Crop Production.shp") 
+st_write(ground.crop.sf, "/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp") 
 
 
 ################################# Prep Grizzly Population Units:
@@ -292,7 +292,7 @@ plot(st_geometry(extent.grizz))
 plot(st_geometry(south.int.10k.buf), add=TRUE)
 
   # Save this for later:
-st_write(extent.grizz, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/Extent Grizzly Pop Units.shp") 
+st_write(extent.grizz, "/Users/shannonspragg/SOI-Grizz/Data/processed/Extent Grizzly Pop Units.shp") 
 
 
 
@@ -317,5 +317,5 @@ hm.dens.rsmple <- resample(hum.dens.crop, soi.rast, method='bilinear')
 
 
 # Save Raster as .tif for later: ----------------------------------------------------
-terra::writeRaster(hm.dens.rsmple, "/Users/shannonspragg/ONA_GRIZZ/Data/processed/human_dens.tif")
+terra::writeRaster(hm.dens.rsmple, "/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens.tif")
 
