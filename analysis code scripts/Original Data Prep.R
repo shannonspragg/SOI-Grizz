@@ -265,6 +265,11 @@ st_write(animal.prod.sf,"/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Pr
 
 st_write(ground.crop.sf, "/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp") 
 
+# Subset to only the columns we want:
+animal.prod.bc <- animal.prod.bc.sf[, c("CCSUID", "Total Farms in CCS", "GEO", "VALUE", "CCSNAME", "AREA_SQ_KM"
+                                        , "Farms_per_sq_km", "geometry")]
+ground.crop.bc <- ground.crop.bc.sf[, c("CCSUID", "Total Farms in CCS", "GEO", "VALUE", "CCSNAME", "AREA_SQ_KM"
+                                        , "Farms_per_sq_km", "geometry")]
 
 ################################# Prep Grizzly Population Units:
 
