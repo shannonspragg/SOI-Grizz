@@ -42,7 +42,7 @@ can.ccs.shp<-st_read("/Users/shannonspragg/SOI-Grizz/Data/original/lccs000b16a_e
   # Global Human Density:
 world.hum.dens <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_1_deg.tif")
   # Grizzly Population Units:
-grizz.units <- st_read("/Users/shannonspraggSOI-Grizz/Data/original/GBPU_BC_polygon.shp")
+grizz.units <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/GBPU_BC_polygon.shp")
   # Grizz Inc:
 grizz.inc.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
 
