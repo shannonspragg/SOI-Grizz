@@ -65,9 +65,9 @@ metro.reproj <- st_make_valid(bc.metro) %>%
 grizz.pop.reproj <- st_make_valid(extent.grizz) %>% 
   st_transform(crs=crs(soi.rast))
 
-farms.reproj <- st_make_valid(dominant.farms.bc) %>% 
+animal.farms.reproj <- st_make_valid(animal.prod.sf) %>% 
   st_transform(crs=crs(soi.rast))
-total.farms.reproj <- st_make_valid(total.farms.bc) %>% 
+ground.crop.reproj <- st_make_valid(ground.crop.sf) %>% 
   st_transform(crs=crs(soi.rast))
 soi.bound.reproj <- st_make_valid(soi.10k.boundary) %>% 
   st_transform(crs=crs(soi.rast))
@@ -75,7 +75,7 @@ soi.bound.reproj <- st_make_valid(soi.10k.boundary) %>%
 # Check to see if they match:
 st_crs(bears.reproj) == st_crs(bc.PAs.reproj) # [TRUE] = These ARE now the same
 st_crs(pres.abs.reproj) == st_crs(bears.reproj) # [TRUE] = These ARE now the same
-st_crs(metro.reproj) == st_crs(total.farms.reproj) # [TRUE]
+st_crs(metro.reproj) == st_crs(animal.farms.reproj) # [TRUE]
 
 ############################ Adding the Distance Variables to the Data:
 
@@ -217,25 +217,31 @@ which(is.na(pres.abs.reproj$dist_to_GrizzPop)) #none
   ## Here we make rasters for the farm type categories within our SOI region:
 
   # Make these spat vectors:
-animal.prod.sv <- vect(animal.prod.sf)
-ground.crop.sv <- vect(ground.crop.sf)
+animal.prod.sv <- vect(animal.farms.reproj)
+ground.crop.sv <- vect(ground.crop.reproj)
 
 
   # Rasterize our subset rasters:
 animal.prod.rast <- terra::rasterize(animal.prod.sv, soi.rast, field = "Frms___")
 ground.crop.rast <- terra::rasterize(ground.crop.sv, soi.rast, field = "Frms___")
 
-
-  # Fix the column names:
+# Fix the column names:
 names(animal.prod.rast)[names(animal.prod.rast) == "Frms___"] <- "Density of Animal Product & Meat Farming / sq km"
 names(ground.crop.rast)[names(ground.crop.rast) == "Frms___"] <- "Density of Ground Crop & Produce Farming / sq km"
-
 
   # Save these Farm Rasters:
 terra::writeRaster(animal.prod.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
 terra::writeRaster(ground.crop.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif" )
 
+# Adjust values:
+animal.prod.rast[animal.prod.rast > 1.5] <- 2
+ground.crop.rast[ground.crop.rast > 1.5] <- 2
 
+animal.prod.adjusted <- animal.prod.rast
+ground.crop.adjusted <- ground.crop.rast
+
+terra::writeRaster(animal.prod.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_adjusted.tif")
+terra::writeRaster(ground.crop.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_adjusted.tif" )
 
 # Buffer WARP Points Before Attributing Farm Values -----------------------
   # Here we buffer the WARP and pres-abs points by 5000m (5km) before extracting the attributes from the farm polygons
