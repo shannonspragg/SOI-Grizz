@@ -243,6 +243,11 @@ ground.crop.adjusted <- ground.crop.rast
 terra::writeRaster(animal.prod.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_adjusted.tif")
 terra::writeRaster(ground.crop.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_adjusted.tif" )
 
+farm.density.combined <- terra::merge(animal.prod.adjusted, ground.crop.adjusted)
+farm.density.combined[farm.density.combined > 1] <- 1
+
+terra::writeRaster(farm.density.combined, "/Users/shannonspragg/SOI-Grizz/Data/processed/combined_farm_density.tif" )
+
 # Buffer WARP Points Before Attributing Farm Values -----------------------
   # Here we buffer the WARP and pres-abs points by 5000m (5km) before extracting the attributes from the farm polygons
 bears.buf <- bears.reproj %>% 

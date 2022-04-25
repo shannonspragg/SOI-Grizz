@@ -36,6 +36,10 @@ extent.grizz <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Extent Gr
   # Human Density for SOI:
 hm.dens <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens.tif") # SOI Region 10km
 
+  # Farm Rasters:
+animal.prod.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
+ground.crop.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif" )
+
   
 ################################# First, we need to produce our Distance to PA, Metro, and Grizzly Pop Rasters:
 
@@ -117,6 +121,23 @@ names(dist.grizz.pop.raster)[names(dist.grizz.pop.raster) == "OBJECTID"] <- "Dis
 #plot(dist.pa.rast.invert) # This just makes the 0km distance the "highest" value (i.e. closest in proximity)
 #plot(dist.met.rast.invert)
 #plot(dist.grizz.rast.invert)
+
+######################################## Adjust Farm Rasters:
+
+# Adjust values:
+animal.prod.rast[animal.prod.rast > 1.5] <- 2
+ground.crop.rast[ground.crop.rast > 1.5] <- 2
+
+animal.prod.adjusted <- animal.prod.rast
+ground.crop.adjusted <- ground.crop.rast
+
+terra::writeRaster(animal.prod.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_adjusted.tif")
+terra::writeRaster(ground.crop.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_adjusted.tif" )
+
+farm.density.combined <- terra::merge(animal.prod.adjusted, ground.crop.adjusted)
+farm.density.combined[farm.density.combined > 1] <- 1
+
+terra::writeRaster(farm.density.combined, "/Users/shannonspragg/SOI-Grizz/Data/processed/combined_farm_density.tif" )
 
 
 ######################################## Now we Match All of our Rasters:
