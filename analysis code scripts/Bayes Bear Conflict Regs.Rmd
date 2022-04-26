@@ -107,13 +107,13 @@ warp.sv <- vect(warp.all.buf)
 # Here I will extract the mean values from each raster to the buffered points
 warp.prob.gen.ext <- terra::extract(prob.gen.conf.rast, warp.sv, mean, na.rm = TRUE) 
 
-warp.prob.gen.ext <- terra::extract(p_conf_rast, warp.sv, mean, na.rm = TRUE) # with no inverted rasters
-
 # Create New Column(s) for Extracted Values:
 warp.df$ProbGeneralConf <- warp.prob.gen.ext[,2]
 
 # Check for NA's:
 which(is.na(warp.df$ProbGeneralConf)) #none
+
+st_write(warp.df, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp_df_complete.shp")
 ```
 
 ```{r scaling variables, echo=FALSE, include=FALSE}
