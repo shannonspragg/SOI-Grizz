@@ -164,6 +164,15 @@ post.co.int <- stan_glmer(bears_presence_co ~ 1 + (1 | CCSNAME.co),
                            seed = SEED, refresh=0) # we add seed for reproducibility
 
 # Our full model + offset for p(general conflict):
+post.co.no.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + prob.gen.conf, 
+                             data = mini.warp.df.co,
+                             family = binomial(link = "logit"), # define our binomial glm
+                             prior = t_prior, prior_intercept = int_prior, QR=TRUE,
+                             iter = 5000, # Run for enough iterations to avoid errors
+                             seed = SEED, refresh=0) # we add seed for reproducibility
+
+
+# Our full model + offset for p(general conflict):
 post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + offset(prob.gen.conf), 
                              data = mini.warp.df.co,
                              family = binomial(link = "logit"), # define our binomial glm

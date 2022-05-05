@@ -263,6 +263,9 @@ kfold.10.ps.int <- kfold(post.int.only, K=10, cores = getOption("mc.cores", 1))
 # Try a stratified k-fold, stratifying on the CCSID variable:
 cv10folds.ccs <- kfold_split_stratified(K=10, x=mini.warp.df.ps$CCSNAME.ps)
 
+  # Compare K-fold results:
+kfold.pa.compare <- loo_compare(kfold.10.ps.int, kfold.10.ps)
+
 # Save this as data:
 saveRDS(kfold.10.ps, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10.rds")
 saveRDS(kfold.10.ps.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10_int.rds")
