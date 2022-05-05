@@ -258,7 +258,7 @@ We conduct a leave-one-out cross validation for our three models and then compar
 
 # (if possible also specify the 'cores' argument to use multiple cores) 
 kfold.10.ps <-kfold(post.pa.full, K=10, cores = getOption("mc.cores", 1), save_fits = TRUE)
-kfold.10.ps.int <- kfold(post.int.only, K=10, cores = getOption("mc.cores", 1))
+kfold.10.ps.int <- kfold(post.int.only, K=10, cores = getOption("mc.cores", 1), save_fits = TRUE)
 
 # Try a stratified k-fold, stratifying on the CCSID variable:
 cv10folds.ccs <- kfold_split_stratified(K=10, x=mini.warp.df.ps$CCSNAME.ps)
@@ -271,6 +271,8 @@ saveRDS(kfold.10.ps, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_
 saveRDS(kfold.10.ps.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10_int.rds")
 
 kfold.10.ps <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10.rds")
+kfold.10.ps.int <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10_int.rds")
+
 ```
 
 ## Create our Varying Intercept Raster

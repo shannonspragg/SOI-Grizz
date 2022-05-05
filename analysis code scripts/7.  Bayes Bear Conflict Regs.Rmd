@@ -180,6 +180,14 @@ post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.
                              iter = 5000, # Run for enough iterations to avoid errors
                              seed = SEED, refresh=0) # we add seed for reproducibility
 
+# Partial model (removing correlated ag variable):
+post.co.partial.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co  + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + offset(prob.gen.conf), 
+                             data = mini.warp.df.co,
+                             family = binomial(link = "logit"), # define our binomial glm
+                             prior = t_prior, prior_intercept = int_prior, QR=TRUE,
+                             iter = 5000, # Run for enough iterations to avoid errors
+                             seed = SEED, refresh=0) # we add seed for reproducibility
+
 # Save these model objects:
 saveRDS(post.co.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
 saveRDS(post.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
@@ -264,7 +272,7 @@ plot(loo.co.offset, label_points = TRUE)
 # Compare to our baseline:
 (loo.0.co <- loo(post.co.int, save_psis = TRUE)) # computing the PSIS-LOO for our baseline model
 
-loo.comparison.co <- loo_compare(loo.0.co, loo.co.no.offset, loo.co.offset) # this high negative value for post0 shows us the covariates contain clearly useful information for predictions
+loo.comparison.co <- loo_compare(loo.0.co, loo.no.offset, loo.co.offset) # this high negative value for post0 shows us the covariates contain clearly useful information for predictions
 loo.comparison.co
 
   # Save these:
@@ -281,9 +289,11 @@ cv10folds <- kfold_split_stratified(K=10, x=mini.warp.df.ps$dom.farms.ps)
 
 kfold.10.co <- kfold(post.co.offset, K=10, cores = getOption("mc.cores", 1))
 kfold.10.co.int <- kfold(post.co.int, K=10, cores = getOption("mc.cores", 1))
+kfold.10.no.offset.co <- kfold(post.co.no.offset, K=10, cores = getOption("mc.cores", 1))
 
   # Compare K-fold results:
 kfold.co.compare <- loo_compare(kfold.10.co.int, kfold.10.co)
+kfold.co.compare
 
 # Save this as data:
 saveRDS(kfold.10.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
@@ -291,6 +301,7 @@ saveRDS(kfold.10.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/p
 
 # Recover the k-fold results:
 kfold.10.co <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
+kfold.10.co.int <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
 
 kfold.10.co
 ```
