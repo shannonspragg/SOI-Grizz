@@ -183,9 +183,11 @@ post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.
 # Save these model objects:
 saveRDS(post.co.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
 saveRDS(post.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
+saveRDS(post.co.no.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_no_offset.rds")
 
 # Restore the object
 post.co.offset <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
+post.co.no.offset <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_no_offset.rds")
 post.co.int <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
 ```
 Here we set our initial priors to students t with 7 degrees of freedom, and a scale of 2.5 which is a reasonable default fir prior when coefficients should be close to zero but have some chance of being large. We build our two models using stan_glm to return our posterior distribution for the specified model parameters. Our first model is an intercept only (null) model which only includes our intercept and varying intercepts. It has the simple formula of logit(p_conflict) = conflict_presence ~ 1 + a[CCS]. Model 2, logit(p_conflict) = a[CCS] + B_1 * Dist2PA + B_2 * Dist2GrizzPops + B_3 * AnimalFarming + B_4 * GroundCropFarming + B_5 * GrizzIncrease + B_6 * BHS + B_7 * Biophys + offset[prob.gen.conflict].  
@@ -253,8 +255,9 @@ Comparing the simple pseudo-absence model with the full model in a ROC plot show
 # Loo package implements fast Pareto smoothed leave-one-out-cross-val (PSIS-LOO) to compute expected log predictive density:
 (loo.co.offset <- loo(post.co.offset, save_psis = TRUE))
 
-plot(loo.co.full, label_points = TRUE)
-loo.co.full # get the summary of our test
+plot(loo.co.offset, label_points = TRUE)
+
+(loo.no.offset <- loo(post.co.no.offset, save_psis = TRUE))
 
 ##### Comparison to Baseline Model: --
 
@@ -264,8 +267,13 @@ post0.co <- update(post.co.int, formula = bears_presence_co ~ 1 + (1 | CCSNAME.p
 # Compare to our baseline:
 (loo.0.co <- loo(post.co.int)) # computing the PSIS-LOO for our baseline model
 
-loo.comparison.co <- loo_compare(loo.0.co, loo.co.full, loo.co.offset) # this high negative value for post0 shows us the covariates contain clearly useful information for predictions
+loo.comparison.co <- loo_compare(loo.0.co, loo.co.no.offset, loo.co.offset) # this high negative value for post0 shows us the covariates contain clearly useful information for predictions
 loo.comparison.co
+
+  # Save these:
+saveRDS(loo.co.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
+saveRDS(loo.0.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
+saveRDS(loo.no.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_no_offset.rds")
 ```
 We conduct a leave-one-out cross validation for our three models and then compare them to the zero posterior. Above, we see that the full model and simple model's PSIS-LOO result is reliable as all Pareto k estimates are small (k< 0.5) and the Monte Carlo SE is 0.1 (Vehtari, Gelman and Gabry 2017a). The null model is also reliable as it has a Monte Carlo SE of 0.0 and all Pareto k estimates are small (k< 0.5). Comparing these LOO values to our baseline, we see that the theoretical expected log point wise predictive density (elpd_loo) is lowest for our full model (still lower than the compare model) and highest for our baseline posterior (null model), indicating that the increased covariates in our models contain clearly useful information for predictions.
 
@@ -276,6 +284,9 @@ cv10folds <- kfold_split_stratified(K=10, x=mini.warp.df.ps$dom.farms.ps)
 
 kfold.10.co <- kfold(post.co.offset, K=10, cores = getOption("mc.cores", 1))
 kfold.10.co.int <- kfold(post.co.int, K=10, cores = getOption("mc.cores", 1))
+
+  # Compare K-fold results:
+kfold.co.compare <- loo_compare(kfold.10.co.int, kfold.10.co)
 
 # Save this as data:
 saveRDS(kfold.10.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
