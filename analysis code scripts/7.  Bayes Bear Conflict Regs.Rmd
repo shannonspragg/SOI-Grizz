@@ -114,6 +114,7 @@ warp.df$ProbGeneralConf <- warp.prob.gen.ext[,2]
 which(is.na(warp.df$ProbGeneralConf)) #none
 
 st_write(warp.df, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp_df_complete.shp")
+warp.df <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp_df_complete.shp")
 ```
 
 ```{r scaling variables, echo=FALSE, include=FALSE}
@@ -144,8 +145,7 @@ We we center our predictors by subtracting the means and scale by dividing by tw
 # Fit Data for Rstanarm: --------------------------------------------------
 
 # Do this for our conflict only df:
-mini.warp.df.co <- data.frame(bears_presence_co, dist.2.pa.co, dist.2.grizzpop.co, animal.farm.dens.co, ground.crop.dens.co, 
-                              grizzinc.co, bhs.co, biophys.co, CCSNAME.co, prob.gen.conf )
+mini.warp.df.co <- data.frame(bears_presence_co, dist.2.pa.co, dist.2.grizzpop.co, animal.farm.dens.co, ground.crop.dens.co, grizzinc.co, bhs.co, biophys.co, CCSNAME.co, prob.gen.conf )
 str(mini.warp.df.co)
 ```
 Here we produce a mini data frame that excludes the spatial geometry, but includes all of our critical predictors.
@@ -217,7 +217,10 @@ We see that there is some correlation between the two agriculture variables. How
 
 ## Plot our Mixed Effects & Odds Ratios:
 ```{r mixed effects, echo=FALSE}
-# Plotting Mixed Effects: -------------------------------------------------
+# Plotting Marginal & Mixed Effects: -------------------------------------------------
+
+  # Plot Individual Interacting Effects:
+plot_model(post.co.offset, type = "pred", terms = c( "dist.2.pa.co", "dist.2.grizzpop.co", "grizzinc.co"))
 
 # Plot the posterior for just fixed effects of our different variables:
 plot_model(post.co.offset, sort.est = TRUE) # This plots just fixed effects
@@ -290,6 +293,7 @@ cv10folds <- kfold_split_stratified(K=10, x=mini.warp.df.ps$dom.farms.ps)
 kfold.10.co <- kfold(post.co.offset, K=10, cores = getOption("mc.cores", 1))
 kfold.10.co.int <- kfold(post.co.int, K=10, cores = getOption("mc.cores", 1))
 kfold.10.no.offset.co <- kfold(post.co.no.offset, K=10, cores = getOption("mc.cores", 1))
+kfold.10.partial.offset.co <- kfold(post.co.partial.offset, K=10, cores = getOption("mc.cores", 1))
 
   # Compare K-fold results:
 kfold.co.compare <- loo_compare(kfold.10.co.int, kfold.10.co)
@@ -298,6 +302,8 @@ kfold.co.compare
 # Save this as data:
 saveRDS(kfold.10.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
 saveRDS(kfold.10.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
+saveRDS(kfold.10.no.offset.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
+saveRDS(kfold.10.partial.offset.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
 
 # Recover the k-fold results:
 kfold.10.co <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")

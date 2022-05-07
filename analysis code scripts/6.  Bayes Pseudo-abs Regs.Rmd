@@ -132,6 +132,7 @@ post.pa.full <- stan_glmer(conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps +
                             data = mini.warp.df.ps,
                             family = binomial(link = "logit"), # define our binomial glm
                             prior = t_prior, prior_intercept = int_prior, QR=TRUE,
+                            iter = 5000,
                             seed = SEED, refresh=0) # we add seed for reproducability
 
 summary(post.int.onlny)
@@ -175,11 +176,21 @@ We see that there is some correlation between the two agriculture variables. How
 
 ## Plotting Our Mixed Effects:
 ```{r mixed efffects, echo=FALSE}
-# Plotting Marginal Effects:
+  # Adjust Variable Names for Model Plots:
+names(post.pa.full$data)[names(post.pa.full$data) == "dist.2.pa.ps"] <- "Distance to Nearest PA"
+names(post.pa.full$data)[names(post.pa.full$data) == "dist.2.met.ps"] <- "Distance to Nearest Metro Area"
+names(post.pa.full$data)[names(post.pa.full$data) == "animal.farm.dens.ps"] <- "Density of Animal Farms"
+names(post.pa.full$data)[names(post.pa.full$data) == "ground.crop.dens.ps"] <- "Density of Ground Crop Farms"
+names(post.pa.full$data)[names(post.pa.full$data) == "pop.dens"] <- "Population Density"
+names(post.pa.full$data)[names(post.pa.full$data) == "conflict_presence_ps"] <- "General Conflict Reporting"
+
+
+ # Plotting Marginal Effects:
 plot_model(post.pa.full, type = "pred", title="Predicted Probabilities of General Conflict Presence",
            axis.labels=c("Conflict Presence", "Distance to PA" ,"Distance to Metro" ,"Dominant Farm Type", "Total Farm Count", "[Total Farm Count]^2", "Population Density" ))
 
-plot_model(post.pa.full, type = "pred", terms = c("dist.2.pa.ps", "dist.2.met.ps", "pop.dens", "animal.farm.dens.ps", "ground.crop.dens.ps"))
+  # Plot Individual Interacting Effects:
+plot_model(post.pa.full, type = "pred", terms = c( "dist.2.pa.ps", "pop.dens", "animal.farm.dens.ps"))
 
 
 # Basic Mixed Effect Plot:
