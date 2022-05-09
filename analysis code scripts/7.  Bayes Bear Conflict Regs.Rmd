@@ -192,10 +192,12 @@ post.co.partial.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.g
 saveRDS(post.co.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
 saveRDS(post.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
 saveRDS(post.co.no.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_no_offset.rds")
+saveRDS(post.co.partial.offset, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_partial_offset.rds")
 
 # Restore the object
 post.co.offset <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_offset.rds")
 post.co.no.offset <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_no_offset.rds")
+post.co.partial.offset <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_partial_offset.rds")
 post.co.int <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int.rds")
 ```
 Here we set our initial priors to students t with 7 degrees of freedom, and a scale of 2.5 which is a reasonable default fir prior when coefficients should be close to zero but have some chance of being large. We build our two models using stan_glm to return our posterior distribution for the specified model parameters. Our first model is an intercept only (null) model which only includes our intercept and varying intercepts. It has the simple formula of logit(p_conflict) = conflict_presence ~ 1 + a[CCS]. Model 2, logit(p_conflict) = a[CCS] + B_1 * Dist2PA + B_2 * Dist2GrizzPops + B_3 * AnimalFarming + B_4 * GroundCropFarming + B_5 * GrizzIncrease + B_6 * BHS + B_7 * Biophys + offset[prob.gen.conflict].  
@@ -296,14 +298,15 @@ kfold.10.no.offset.co <- kfold(post.co.no.offset, K=10, cores = getOption("mc.co
 kfold.10.partial.offset.co <- kfold(post.co.partial.offset, K=10, cores = getOption("mc.cores", 1))
 
   # Compare K-fold results:
-kfold.co.compare <- loo_compare(kfold.10.co.int, kfold.10.co)
+kfold.co.compare <- loo_compare(kfold.10.co.int, kfold.10.co, kfold.10.no.offset.co, kfold.10.partial.offset.co)
 kfold.co.compare
 
 # Save this as data:
 saveRDS(kfold.10.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
 saveRDS(kfold.10.co.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
-saveRDS(kfold.10.no.offset.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
-saveRDS(kfold.10.partial.offset.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_int_kfold10.rds")
+saveRDS(kfold.10.no.offset.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_no_offset_kfold10.rds")
+saveRDS(kfold.10.partial.offset.co, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_partial_kfold10.rds")
+saveRDS(kfold.co.compare, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/kfold_compare_co.rds")
 
 # Recover the k-fold results:
 kfold.10.co <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_co_kfold10.rds")
