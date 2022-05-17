@@ -346,7 +346,7 @@ warp.ps.sv <- vect(warp.varint.join)
 # Make our CCS Post Mean Raster: ------------------------------------------
 soi.ccs.rast <- terra::rasterize(soi.ccs.sv, soi.rast, field = "CCSNAME")
 
-# Make Raster for our Posterior Means for CCS Varying Intercept: ---------------------
+# Make Raster for our Posterior Means for CCS Varying Intercept:---------------------
 varint.means.rast <- terra::rasterize(warp.ps.sv, soi.rast, field = "CCS_Varying_Int")
 names(varint.means.rast)[names(varint.means.rast) == "OBJECTID"] <- "CCS Varying Intercept Mean Estimate"
 
@@ -421,7 +421,7 @@ summary(post.pa.full)
 fixef(post.pa.full)
 
 # Stack these spatrasters:
-conf.rast.stack <- c(dist2pa.rast.sc, dist2metro.rast.sc, animal.farm.rast.sc, ground.crop.rast.sc, hm.dens.rast.sc, ccs.varint.rast)
+conf.rast.stack <- c(dist2pa.rast.sc, dist2metro.rast.sc, animal.farm.rast.sc, ground.crop.rast.sc, hm.dens.rast.sc, ccs.varint.means.rast)
 plot(conf.rast.stack) # plot these all to check
 
 

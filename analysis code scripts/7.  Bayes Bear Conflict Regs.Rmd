@@ -395,6 +395,7 @@ plot(ccs.varint.means.rast)
 
 # Save our CCS Post Means Raster: -----------------------------------------
 terra::writeRaster(ccs.varint.means.rast.co, "/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster_co.tif" )
+ccs.varint.means.rast.co <- rast("/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster_co.tif")
 ```
 
 
@@ -430,9 +431,9 @@ ground.c.sd.co <- sd(warp.df$Grnd_Cr)
 ground.crop.rast.co.sc <- ground.c.sub.mean.co / ( 2 * ground.c.sd.co)
 
 # Grizz Increase:
-grizzinc.mean.co <- mean(warp.df$GrizzInc)
+grizzinc.mean.co <- mean(warp.df$GrzzInc)
 grizz.sub.mean.co <- grizzinc.rast - grizzinc.mean.co
-grizzinc.sd.co <- sd(warp.df$GrizzInc)
+grizzinc.sd.co <- sd(warp.df$GrzzInc)
 grizzinc.rast.co.sc <- grizz.sub.mean.co / ( 2 * grizzinc.sd.co)
 
 # Biophys:
