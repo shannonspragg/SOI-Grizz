@@ -48,14 +48,14 @@ sw <- black.bears
 bb.pts <- as.ppp(sw)
 marks(bb.pts) <- NULL
 bb.pts <- rescale(bb.pts, 1000)
-Window(bb.pts) <- w.km
+Window(bb.pts) <- w
 
 # Lastly, our grizzly bears points shapefile:
 gw <- grizz.bears
 gb.pts <- as.ppp(gw)
 marks(gb.pts) <- NULL
 gb.pts <- rescale(gb.pts, 1000)
-Window(gb.pts) <- w.km
+Window(gb.pts) <- w
 
 # Visualize our Data Points -----------------------------------------------
 # Plot the points and boundary:
@@ -160,6 +160,9 @@ title("Grizzly & Black Bear KDE Correlation for Southern Interior")
 
 
 # Plotting the Correlation: -----------------------------------------------
+  # Assign Projection to Rasters:
+crs(bears.kde.corr) <- CRS('+init=EPSG:3153')
+
 
 # Reproject the vector data:
 b.bears.reproj <- st_make_valid(black.bears) %>% 
@@ -189,13 +192,10 @@ legend("topright",   # set position
 
 
 # Write as .tif files: ----------------------------------------------------
-raster::writeRaster(K1.bb.raster, "/Users/shannonspragg/ONA_GRIZZ/Bears KDE/black_bear_kde.tif")
-raster::writeRaster(K2.bb.rastr, "/Users/shannonspragg/ONA_GRIZZ/Bears KDE/black_bear_kde_50km.tif")
-raster::writeRaster(K1.gb.raster, "/Users/shannonspragg/ONA_GRIZZ/Bears KDE/grizz_bear_kde.tif")
-raster::writeRaster(K2.gb.raster, "/Users/shannonspragg/ONA_GRIZZ/Bears KDE/grizz_bear_kde_50km.tif")
+raster::writeRaster(K1.bb.raster, "/Users/shannonspragg/SOI-Grizz/Data/processed/black_bear_kde.tif")
+raster::writeRaster(K2.bb.rastr, "/Users/shannonspragg/SOI-Grizz/Data/processed/black_bear_kde_50km.tif")
+raster::writeRaster(K1.gb.raster, "/Users/shannonspragg/SOI-Grizz/Data/processed/grizz_bear_kde.tif")
+raster::writeRaster(K2.gb.raster, "/Users/shannonspragg/SOI-Grizz/Data/processed/grizz_bear_kde_50km.tif")
 
-raster::writeRaster(bears.kde.corr, "/Users/shannonspragg/ONA_GRIZZ/Bears KDE/gbears_kde_correlation.tif")
+raster::writeRaster(bears.kde.corr, "/Users/shannonspragg/SOI-Grizz/Data/processed/gbears_kde_correlation.tif")
 
-# Test this:
-test.bb.kde <- raster("/Users/shannonspragg/ONA_GRIZZ/Bears KDE/grizz_bear_kde_50km.tif")
-plot(test.bb.kde)
