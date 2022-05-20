@@ -224,6 +224,11 @@ We see that there is some correlation between the two agriculture variables. How
   # Plot Individual Interacting Effects:
 plot_model(post.co.offset, type = "pred", terms = c( "dist.2.pa.co", "dist.2.grizzpop.co", "grizzinc.co"))
 
+  # Try this with our two biggest predictors:
+plot_model(post.co.offset, type = "pred", terms = c( "ground.crop.dens.co", "grizzinc.co"))
+#plot_model(post.co.offset, type = "pred", terms = c( "grizzinc.co", "ground.crop.dens.co"))
+
+
 # Plot the posterior for just fixed effects of our different variables:
 plot_model(post.co.offset, sort.est = TRUE) # This plots just fixed effects
 

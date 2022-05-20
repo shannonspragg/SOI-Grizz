@@ -192,6 +192,9 @@ plot_model(post.pa.full, type = "pred", title="Predicted Probabilities of Genera
   # Plot Individual Interacting Effects:
 plot_model(post.pa.full, type = "pred", terms = c( "dist.2.pa.ps", "pop.dens", "animal.farm.dens.ps"))
 
+  # Lets look at our most impactful predictor:
+plot_model(post.pa.full, type = "pred", terms = c("animal.farm.dens.ps"))
+
 
 # Basic Mixed Effect Plot:
 sjPlot::plot_model(post.pa.full)
