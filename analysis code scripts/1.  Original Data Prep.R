@@ -294,7 +294,7 @@ plot(world.dens.reproj)
 
 crs(world.dens.reproj) == crs(soi.rast) #TRUE
 
-soi.reproj <- st_make_valid(south.int.10k.buf) %>% 
+soi.reproj <- st_make_valid(south.int.10k.buf) %>%  # reproject the vector data first to match hum density, then crop using soi.vect, then reproject smaller hum dens raster to match soi rast, then resample
   st_transform(crs=crs(soi.rast))
 
 
