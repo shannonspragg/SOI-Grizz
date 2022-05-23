@@ -38,7 +38,7 @@ bc.ecoprovs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/ERC_ECOPRO_
   # CAN Agriculture Data
 farm.type <- read.csv("/Users/shannonspragg/SOI-Grizz/Data/original/farm type_32100403.csv")
   # CAN Consolidated Census Subdivisions (CCS):
-can.ccs.shp<-st_read("/Users/shannonspragg/SOI-Grizz/Data/original/lccs000b16a_e.shp")
+can.ccs.shp<- st_make_valid(st_read("/Users/shannonspragg/SOI-Grizz/Data/original/lccs000b16a_e.shp"))
   # Global Human Density:
 world.hum.dens <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_1_deg.tif")
   # Grizzly Population Units:
@@ -46,8 +46,13 @@ grizz.units <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/GBPU_BC_pol
   # Grizz Inc:
 grizz.inc.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
 
-################# We begin by filtering to our SOI ecoprovince, buffering, and cropping our conflict data to the buffered region:
+  # Check Validity:
+any(!st_is_valid(bc.ecoprovs)) #FALSE
+any(!st_is_valid(can.ccs.shp)) # FALSE
+any(!st_is_valid(grizz.units)) # FALSE
 
+
+################# We begin by filtering to our SOI ecoprovince, buffering, and cropping our conflict data to the buffered region:
 
 # Prepping the WARP Data: -------------------------------
   # Merge the two encounter columns into one total encounter column:
@@ -60,8 +65,7 @@ warp.all.sp<- warp.all.sp %>%
 head(warp.all.sp) # Check this to make sure it looks good
 
   # Making Conflict Data a Spatial Dataframe 
-
-bc.sp<-structure(warp.all.sp,longitude= "encounter_lng", latitude= "encounter_lat", class="data.frame")
+bc.sp<- structure(warp.all.sp,longitude= "encounter_lng", latitude= "encounter_lat", class="data.frame")
 head(bc.sp)
 xy<-bc.sp[,c(8,7)]
 bears.spdf<-SpatialPointsDataFrame(coords = xy,data = bc.sp,
@@ -152,7 +156,7 @@ bc.ccs<-can.ccs.sf %>%
   st_make_valid()
   
 # Save this for later:
-st_write(bc.ccs, "/Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp")
+st_write(bc.ccs, "/Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp", append = FALSE)
 
 
 # Filter the Ag Files down to just BC districts: --------------------------
@@ -261,9 +265,9 @@ ground.crop.sf$Farms_per_sq_km <- as.numeric(as.character(ground.crop.sf$Farms_p
 
 
   # Save these as .shp's for later:
-st_write(animal.prod.sf,"/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp")
+st_write(animal.prod.sf,"/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp", append = TRUE)
 
-st_write(ground.crop.sf, "/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp") 
+st_write(ground.crop.sf, "/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp", append = TRUE) 
 
 ################################# Prep Grizzly Population Units:
 
@@ -298,7 +302,7 @@ plot(world.dens.reproj)
 
 crs(world.dens.reproj) == crs(soi.rast) #TRUE
 
-soi.reproj <- st_make_valid(soi.10k.boundary) %>% 
+soi.reproj <- st_make_valid(south.int.10k.buf) %>% 
   st_transform(crs=crs(soi.rast))
 
 
