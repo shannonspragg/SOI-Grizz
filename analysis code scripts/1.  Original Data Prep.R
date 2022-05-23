@@ -16,6 +16,7 @@ library(stars)
 library(units)
 library(googledrive)
 
+
 # Load our Data with GoogleDrive: -----------------------------------------
 options(
   gargle_oauth_cache = ".secrets",
@@ -32,19 +33,23 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
 # Bring in our Original Data --------------------------------------------
 
   # WARP All Species 1 Year:
-warp.all.sp <-read.csv("/Users/shannonspragg/SOI-Grizz/Data/original/WARP 3.24.20 to 3.31.21 full .csv")
+warp.all.sp <-read.csv("Data/original/WARP 3.24.20 to 3.31.21 full .csv")
   # BC Ecoprovinces:
-bc.ecoprovs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/ERC_ECOPRO_polygon.shp")
+bc.ecoprovs <- st_read("Data/original/ERC_ECOPRO_polygon.shp")
   # CAN Agriculture Data
-farm.type <- read.csv("/Users/shannonspragg/SOI-Grizz/Data/original/farm type_32100403.csv")
+farm.type <- read.csv("Data/original/farm type_32100403.csv")
   # CAN Consolidated Census Subdivisions (CCS):
+<<<<<<< HEAD
 can.ccs.shp<- st_make_valid(st_read("/Users/shannonspragg/SOI-Grizz/Data/original/lccs000b16a_e.shp"))
+=======
+can.ccs.shp<-st_read("Data/original/lccs000b16a_e.shp")
+>>>>>>> 63e5afa98b6f712b8d3d2f8171903112f2b2cae3
   # Global Human Density:
-world.hum.dens <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_1_deg.tif")
+world.hum.dens <- terra::rast("Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_1_deg.tif")
   # Grizzly Population Units:
-grizz.units <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/GBPU_BC_polygon.shp")
+grizz.units <- st_read("Data/original/GBPU_BC_polygon.shp")
   # Grizz Inc:
-grizz.inc.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
+grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
 
   # Check Validity:
 any(!st_is_valid(bc.ecoprovs)) #FALSE
@@ -103,7 +108,7 @@ plot(st_geometry(south.int.10k.buf))
 plot(st_geometry(south.interior.ep), add= TRUE) # Here we see it with a 10k buffer
 
   # Save this buffered SOI Boundary:
-st_write(south.int.10k.buf, "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km_buf.shp")
+st_write(south.int.10k.buf, "Data/processed/SOI_10km_buf.shp")
 
   # Make our SOI template raster:
 soi.vect <- vect(south.int.10k.buf)
@@ -117,7 +122,7 @@ soi.rast[soi.rast == 327] <- 0
 
 
 # Export as tiff:
-terra::writeRaster(soi.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif")
+terra::writeRaster(soi.rast, "Data/processed/SOI_10km.tif")
 
   # Reports Within a 10k Buffer: 
   # Let's check how many total and just bear reports we include with a 10k buffer:
@@ -140,7 +145,7 @@ warp.crop.10k$AREA_SQM <- NULL
 warp.crop.10k$FEAT_LEN <- NULL
 
 # Save our Cropped WARP DF ------------------------------------------------
-st_write(warp.crop.10k, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp_crop_10km_buf.shp")
+st_write(warp.crop.10k, "Data/processed/warp_crop_10km_buf.shp")
 
 
 ####################### Now, we will filter the CCS regions and Agriculture Data to BC:
@@ -156,7 +161,11 @@ bc.ccs<-can.ccs.sf %>%
   st_make_valid()
   
 # Save this for later:
+<<<<<<< HEAD
 st_write(bc.ccs, "/Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp", append = FALSE)
+=======
+st_write(bc.ccs, "Data/processed/BC CCS.shp")
+>>>>>>> 63e5afa98b6f712b8d3d2f8171903112f2b2cae3
 
 
 # Filter the Ag Files down to just BC districts: --------------------------
@@ -265,9 +274,15 @@ ground.crop.sf$Farms_per_sq_km <- as.numeric(as.character(ground.crop.sf$Farms_p
 
 
   # Save these as .shp's for later:
+<<<<<<< HEAD
 st_write(animal.prod.sf,"/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp", append = TRUE)
 
 st_write(ground.crop.sf, "/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp", append = TRUE) 
+=======
+st_write(animal.prod.sf,"Data/processed/Animal Product Farming.shp")
+
+st_write(ground.crop.sf, "Data/processed/Ground Crop Production.shp") 
+>>>>>>> 63e5afa98b6f712b8d3d2f8171903112f2b2cae3
 
 ################################# Prep Grizzly Population Units:
 
@@ -289,7 +304,7 @@ plot(st_geometry(extent.grizz))
 plot(st_geometry(south.int.10k.buf), add=TRUE)
 
   # Save this for later:
-st_write(extent.grizz, "/Users/shannonspragg/SOI-Grizz/Data/processed/Extent Grizzly Pop Units.shp") 
+st_write(extent.grizz, "Data/processed/Extent Grizzly Pop Units.shp") 
 
 
 
@@ -314,5 +329,5 @@ hm.dens.rsmple <- resample(hum.dens.crop, soi.rast, method='bilinear')
 
 
 # Save Raster as .tif for later: ----------------------------------------------------
-terra::writeRaster(hm.dens.rsmple, "/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens.tif")
+terra::writeRaster(hm.dens.rsmple, "Data/processed/human_dens.tif")
 

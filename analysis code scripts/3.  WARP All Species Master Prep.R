@@ -19,36 +19,36 @@ library(measurements)
 
 # Bring in the Points Data -------------------------------
   #  WARP SOI 10km Buffer Data:
-warp.all<-st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp_crop_10km_buf.shp") 
+warp.all<-st_read("Data/processed/warp_crop_10km_buf.shp") 
 head(warp.all)
   # Bring in our pres abs data frame to get variables for our absences:
-warp.pres.abs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp_pres.abs.shp")
+warp.pres.abs <- st_read("Data/processed/warp_pres.abs.shp")
 
 
 # Bring in the Variable Data -----------------
   # Our SOI 10km Buffered Boundary:
-soi.10k.boundary <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km_buf.shp")
+soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
   # Filtered BC Protected Areas:
-bc.PAs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/Parks_Combined2.shp") # Clayton's data
+bc.PAs <- st_read("Data/original/Parks_Combined2.shp") # Clayton's data
 
   # BC Metropolitan Areas:
-bc.metro<-st_read("/Users/shannonspragg/SOI-Grizz/Data/original/CNCNSSMTRR_polygon.shp")
+bc.metro<-st_read("Data/original/CNCNSSMTRR_polygon.shp")
 str(bc.metro) # check this
 
   # Animal Product & Meat Farming:
-animal.prod.sf <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp")
+animal.prod.sf <- st_read("Data/processed/Animal Product Farming.shp")
   # Ground Crop & Produce Production:
-ground.crop.sf <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp")
+ground.crop.sf <- st_read("Data/processed/Ground Crop Production.shp")
 
   # BC CCS Regions:
-bc.ccs<-st_read("//Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp")
+bc.ccs<-st_read("Data/processed/BC CCS.shp")
 str(bc.ccs)
 
   # Extent Grizzly Populations:
-extent.grizz <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Extent Grizzly Pop Units.shp")
+extent.grizz <- st_read("Data/processed/Extent Grizzly Pop Units.shp")
 
   # SOI Raster for rasterizing later:
-soi.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
+soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
 
 
 # Reproject All Data ------------------------------------------------------
@@ -230,8 +230,8 @@ names(animal.prod.rast)[names(animal.prod.rast) == "Frms___"] <- "Density of Ani
 names(ground.crop.rast)[names(ground.crop.rast) == "Frms___"] <- "Density of Ground Crop & Produce Farming / sq km"
 
   # Save these Farm Rasters:
-terra::writeRaster(animal.prod.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
-terra::writeRaster(ground.crop.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif" )
+terra::writeRaster(animal.prod.rast, "Data/processed/animal_production_density_raster.tif")
+terra::writeRaster(ground.crop.rast, "Data/processed/ground_crop_density_raster.tif" )
 
 # Adjust values:
 animal.prod.rast[animal.prod.rast > 1.5] <- 2
@@ -240,13 +240,13 @@ ground.crop.rast[ground.crop.rast > 1.5] <- 2
 animal.prod.adjusted <- animal.prod.rast
 ground.crop.adjusted <- ground.crop.rast
 
-terra::writeRaster(animal.prod.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_adjusted.tif")
-terra::writeRaster(ground.crop.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_adjusted.tif" )
+terra::writeRaster(animal.prod.adjusted, "Data/processed/animal_production_density_adjusted.tif")
+terra::writeRaster(ground.crop.adjusted, "Data/processed/ground_crop_density_adjusted.tif" )
 
 farm.density.combined <- terra::merge(animal.prod.adjusted, ground.crop.adjusted)
 farm.density.combined[farm.density.combined > 1] <- 1
 
-terra::writeRaster(farm.density.combined, "/Users/shannonspragg/SOI-Grizz/Data/processed/combined_farm_density.tif" )
+terra::writeRaster(farm.density.combined, "Data/processed/combined_farm_density.tif" )
 
 # Buffer WARP Points Before Attributing Farm Values -----------------------
   # Here we buffer the WARP and pres-abs points by 5000m (5km) before extracting the attributes from the farm polygons
@@ -333,7 +333,7 @@ plot(st_geometry(soi.ccs.crop))
 plot(st_geometry(bears.reproj), add=TRUE)
 
   # Write this as a .shp for later:
-st_write(soi.ccs.crop, "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_CCS_10km.shp")
+st_write(soi.ccs.crop, "Data/processed/SOI_CCS_10km.shp")
 
 # Assign the WARP Points to a CCS Region: ---------------------------------
   ## Here we want to overlay the points with the regions, adding a column in the warp data that is CCS region ID, 
@@ -414,6 +414,6 @@ pres.abs.ccs.join <- pres.abs.dropped
 
 # WARP All Species Master Data Frame --------------------------------------
   # Save the resulting data frames here:
-st_write(warp.ccs.join, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp.master.shp")
-st_write(pres.abs.ccs.join, "/Users/shannonspragg/SOI-Grizz/Data/processed/pres.abs.master.shp")
+st_write(warp.ccs.join, "Data/processed/warp.master.shp")
+st_write(pres.abs.ccs.join, "Data/processed/pres.abs.master.shp")
 

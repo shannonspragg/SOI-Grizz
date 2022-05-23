@@ -54,7 +54,7 @@ library(corrplot)
 ```{r data, echo=FALSE}
 # Import Data: ------------------------------------------------------------
 # Here we have our presence-absence data:
-warp.pres.abs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/pres.abs.final.shp")
+warp.pres.abs <- st_read("Data/processed/pres.abs.final.shp")
 head(warp.pres.abs)
 ```
 
@@ -64,21 +64,19 @@ head(warp.pres.abs)
   # link to data here:   https://drive.google.com/drive/u/0/folders/1T60Al9vHOF-E7ftKzvzN2CMUyF1agC-l
 
   # Distance to Neartest Protected Area (km):
-dist2pa.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/dist2pa_SOI_10km.tif" )
-#dist2pa.inv.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2pa_Sinvert_raster.tif" )
+dist2pa.rast <- terra::rast("Data/processed/dist2pa_SOI_10km.tif" )
 
   # Distance to Nearest Metro Area (km):
-dist2met.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/dist2metro_raster.tif" )
-#dist2met.inv.rast <- terra::rast("/Users/shannonspragg/ONA_GRIZZ/Data/processed/dist2metro_invert_raster.tif" )
+dist2met.rast <- terra::rast("Data/processed/dist2metro_raster.tif" )
 
   # Animal & Meat Farming Density:
-animal.farming.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
+animal.farming.rast <- terra::rast("Data/processed/animal_production_density_raster.tif")
 
   # Ground Crop & Produce Production Density:
-ground.crop.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif")
+ground.crop.rast <- terra::rast("Data/processed/ground_crop_density_raster.tif")
 
   # Human Pop Density (by sq km):
-hm.dens.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens_SOI_10km.tif") # SOI Region 10km
+hm.dens.rast <- terra::rast("Data/processed/human_dens_SOI_10km.tif") # SOI Region 10km
 ```
 
 ```{r scale pres-abs variables, echo=FALSE}
@@ -138,12 +136,12 @@ post.pa.full <- stan_glmer(conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps +
 summary(post.int.onlny)
 summary(post.pa.full)
 
-# Save an object to a file
-saveRDS(post.pa.full, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_full.rds")
-saveRDS(post.int.only, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_int.rds")
-
-post.pa.full <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_full.rds")
-post.int.only <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_int.rds")
+  # Save an object to a file
+saveRDS(post.pa.full, file = "Data/processed/post_pa_full.rds")
+saveRDS(post.int.only, file = "Data/processed/post_pa_int.rds")
+  # Read in saved objects:
+post.pa.full <- readRDS(file = "Data/processed/post_pa_full.rds")
+post.int.only <- readRDS(file = "Data/processed/post_pa_int.rds")
 
 plot_model(post.pa.full, sort.est = TRUE)
 
@@ -262,6 +260,8 @@ post0.ps <- update(post.int.only, formula = bears_presence_ps ~ 1 + (1 | CCSNAME
 
 loo.comparison.ps <- loo_compare(loo.0, loo.pa.comp, loo.pa.full) # this high negative value for post0 shows us the covariates contain clearly useful information for predictions
 loo.comparison.ps
+
+saveRDS(loo.comparison.ps, file = "Data/processed/loo_compare.ps.rds")
 ```
 We conduct a leave-one-out cross validation for our three models and then compare them to the zero posterior. Above, we see that the full model and simple model's PSIS-LOO result is reliable as all Pareto k estimates are small (k< 0.5) and the Monte Carlo SE is 0.1 (Vehtari, Gelman and Gabry 2017a). The null model is also reliable as it has a Monte Carlo SE of 0.0 and all Pareto k estimates are small (k< 0.5). Comparing these LOO values to our baseline, we see that the theoretical expected log point wise predictive density (elpd_loo) is lowest for our full model (still lower than the compare model) and highest for our baseline posterior (null model), indicating that the increased covariates in our models contain clearly useful information for predictions.
 
@@ -280,21 +280,21 @@ cv10folds.ccs <- kfold_split_stratified(K=10, x=mini.warp.df.ps$CCSNAME.ps)
   # Compare K-fold results:
 kfold.pa.compare <- loo_compare(kfold.10.ps.int, kfold.10.ps)
 
-# Save this as data:
-saveRDS(kfold.10.ps, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10.rds")
-saveRDS(kfold.10.ps.int, file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10_int.rds")
-
-kfold.10.ps <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10.rds")
-kfold.10.ps.int <- readRDS(file = "/Users/shannonspragg/SOI-Grizz/Data/processed/post_pa_kfold10_int.rds")
+  # Save this as data:
+saveRDS(kfold.10.ps, file = "Data/processed/post_pa_kfold10.rds")
+saveRDS(kfold.10.ps.int, file = "Data/processed/post_pa_kfold10_int.rds")
+  # Read in saved:
+kfold.10.ps <- readRDS(file = "Data/processed/post_pa_kfold10.rds")
+kfold.10.ps.int <- readRDS(file = "Data/processed/post_pa_kfold10_int.rds")
 
 ```
 
 ## Create our Varying Intercept Raster
 ```{r varying intercept raster, echo=FALSE}
 # Bring in Data: ----------------------------------------------------------
-soi.ccs.crop <- st_read( "/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_CCS_10km.shp")
+soi.ccs.crop <- st_read( "Data/processed/SOI_CCS_10km.shp")
   # Bring in one of our rasters for rasterizing polygon data later:
-soi.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif") # SOI Region 10km
+soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km
 
 # Reproject the Data:
 soi.ccs.reproj <- st_make_valid(soi.ccs.crop) %>% 
@@ -367,8 +367,8 @@ names(soi.ccs.rast)[names(soi.ccs.rast) == "PostMean"] <- "CCS Varying Intercept
 plot(ccs.varint.means.rast) 
 
 # Save our CCS Post Means Raster: -----------------------------------------
-terra::writeRaster(ccs.varint.means.rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster.tif" )
-ccs.varint.means.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/processed/CCS_varint_raster.tif")
+terra::writeRaster(ccs.varint.means.rast, "Data/processed/CCS_varint_raster.tif" )
+ccs.varint.means.rast <- rast("Data/processed/CCS_varint_raster.tif")
 ```
 
 
@@ -441,7 +441,7 @@ We use raster math calculations to apply the regression coefficients to each cor
 
 ```{r write raster}
 # Save our P(General Conflict) Raster:
-terra::writeRaster(p_conf_rast, "/Users/shannonspragg/SOI-Grizz/Data/processed/prob_general_conf_inv.tif")
+terra::writeRaster(p_conf_rast, "Data/processed/prob_general_conf_inv.tif")
 ```
 Next, we can extract the values of this raster to our original warp conflict report data frame (1's = bears, 0's = other species reports), to use the p(general conlfict) as a predictor in the second Bayes model of bear conflict.
 

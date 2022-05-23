@@ -1,4 +1,4 @@
-## ONA-GRIZZ-shannon
+## SOI-GRIZZ
 Below are descriptions of each analysis code script and how to reproduce the full analysis. --------------------------------------------------------
 
 The data for all of the following scripts can be found at this googledrive link: 
