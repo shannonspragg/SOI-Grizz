@@ -327,7 +327,7 @@ plot(st_geometry(bc.ccs.reproj))
 plot(st_geometry(soi.bound.reproj), add=TRUE)
 
 # Crop CCS Down to SOI 10km Extent: --------------------------------------------
-soi.ccs.crop <- st_intersection(bc.ccs.reproj, soi.10k.buf)
+soi.ccs.crop <- st_intersection(bc.ccs.reproj, soi.bound.reproj)
 
 plot(st_geometry(soi.ccs.crop))
 plot(st_geometry(bears.reproj), add=TRUE)
