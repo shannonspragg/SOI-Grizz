@@ -12,10 +12,10 @@ library(dismo)
 library(stars)
 
 # Bring in Data: ----------------------------------------------------------
-soi.10k.buf <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km_buf.shp")
-warp.all <-st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/warp_crop_10km_buf.shp") 
+soi.10k.buf <- st_read("Data/processed/SOI_10km_buf.shp")
+warp.all <-st_read("Data/processed/warp_crop_10km_buf.shp") 
 
-soi.rast <- raster("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif")
+soi.rast <- raster("Data/processed/SOI_10km.tif")
 
 # Make sure our presence points are all species reports: ------------------
   # Convert all of our species to 1's (not just bears):
@@ -69,7 +69,7 @@ all.conflict.pts.w.abs <- rbind(warp.all, abs.pts.sf)
 plot(st_geometry(all.conflict.pts.w.abs))
 
 # Save as New Df: ---------------------------------------------------------
-st_write(all.conflict.pts.w.abs, "/Users/shannonspragg/SOI-Grizz/Data/processed/warp_pres.abs.shp")
+st_write(all.conflict.pts.w.abs, "Data/processed/warp_pres.abs.shp")
 
 
 
