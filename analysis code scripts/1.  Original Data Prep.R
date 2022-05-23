@@ -39,7 +39,7 @@ bc.ecoprovs <- st_read("Data/original/ERC_ECOPRO_polygon.shp")
   # CAN Agriculture Data
 farm.type <- read.csv("Data/original/farm type_32100403.csv")
   # CAN Consolidated Census Subdivisions (CCS):
-can.ccs.shp<-st_read("Data/original/lccs000b16a_e.shp")
+can.ccs.shp<- st_make_valid(st_read("/Users/shannonspragg/SOI-Grizz/Data/original/lccs000b16a_e.shp"))
   # Global Human Density:
 world.hum.dens <- terra::rast("Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_1_deg.tif")
   # Grizzly Population Units:
@@ -47,8 +47,13 @@ grizz.units <- st_read("Data/original/GBPU_BC_polygon.shp")
   # Grizz Inc:
 grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
 
-################# We begin by filtering to our SOI ecoprovince, buffering, and cropping our conflict data to the buffered region:
+  # Check Validity:
+any(!st_is_valid(bc.ecoprovs)) #FALSE
+any(!st_is_valid(can.ccs.shp)) # FALSE
+any(!st_is_valid(grizz.units)) # FALSE
 
+
+################# We begin by filtering to our SOI ecoprovince, buffering, and cropping our conflict data to the buffered region:
 
 # Prepping the WARP Data: -------------------------------
   # Merge the two encounter columns into one total encounter column:
@@ -61,8 +66,7 @@ warp.all.sp<- warp.all.sp %>%
 head(warp.all.sp) # Check this to make sure it looks good
 
   # Making Conflict Data a Spatial Dataframe 
-
-bc.sp<-structure(warp.all.sp,longitude= "encounter_lng", latitude= "encounter_lat", class="data.frame")
+bc.sp<- structure(warp.all.sp,longitude= "encounter_lng", latitude= "encounter_lat", class="data.frame")
 head(bc.sp)
 xy<-bc.sp[,c(8,7)]
 bears.spdf<-SpatialPointsDataFrame(coords = xy,data = bc.sp,
@@ -153,7 +157,8 @@ bc.ccs<-can.ccs.sf %>%
   st_make_valid()
   
 # Save this for later:
-st_write(bc.ccs, "Data/processed/BC CCS.shp")
+st_write(bc.ccs, "/Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp", append = FALSE)
+
 
 
 # Filter the Ag Files down to just BC districts: --------------------------
@@ -204,22 +209,12 @@ farm.soi.subset <- subset(farm.ccs.soi, North.American.Industry.Classification.S
 names(farm.soi.subset)[names(farm.soi.subset) == "North.American.Industry.Classification.System..NAICS."] <- "N_A_I_C"
 
   # Condense Farm Types to Animal & Ground Crop Production:
-animal.product.farming <- dplyr::filter(farm.soi.subset, N_A_I_C == "Beef cattle ranching and farming, including feedlots [112110]" | N_A_I_C == "Cattle ranching and farming [1121]" 
-                                        | N_A_I_C == "Dairy cattle and milk production [112120]" | N_A_I_C == "Hog and pig farming [1122]" | N_A_I_C == "Poultry and egg production [1123]"
-                                        | N_A_I_C == "Chicken egg production [112310]" | N_A_I_C == "Broiler and other meat-type chicken production [112320]" | N_A_I_C == "Turkey production [112330]"
-                                        | N_A_I_C == "Poultry hatcheries [112340]" | N_A_I_C == "Combination poultry and egg production [112391]" | N_A_I_C == "All other poultry production [112399]"
-                                        | N_A_I_C == "Sheep and goat farming [1124]" | N_A_I_C == "Sheep farming [112410]" | N_A_I_C == "Goat farming [112420]" | N_A_I_C =="Other animal production [1129]"
-                                        | N_A_I_C == "Apiculture [112910]" | N_A_I_C == "Horse and other equine production [112920]" | N_A_I_C == "Fur-bearing animal and rabbit production [112930]"
-                                        | N_A_I_C == "Animal combination farming [112991]" | N_A_I_C == "All other miscellaneous animal production [112999]") 
+animal.product.farming <- dplyr::filter(farm.soi.subset,  N_A_I_C == "Cattle ranching and farming [1121]" | N_A_I_C == "Hog and pig farming [1122]" | N_A_I_C == "Poultry and egg production [1123]"
+                                        | N_A_I_C == "Sheep and goat farming [1124]" | N_A_I_C =="Other animal production [1129]") 
 
 
 ground.crop.production <- dplyr::filter(farm.soi.subset, N_A_I_C == "Fruit and tree nut farming [1113]" | N_A_I_C == "Greenhouse, nursery and floriculture production [1114]" | N_A_I_C == "Vegetable and melon farming [1112]"
-                                        | N_A_I_C == "Oilseed and grain farming [1111]" | N_A_I_C == "Soybean farming [111110]" | N_A_I_C == "Oilseed (except soybean) farming [111120]"
-                                        | N_A_I_C == "Dry pea and bean farming [111130]" | N_A_I_C == "Wheat farming [111140]" | N_A_I_C == "Corn farming [111150]" | N_A_I_C == "Other grain farming [111190]"
-                                        | N_A_I_C == "Potato farming [111211]" | N_A_I_C == "Other vegetable (except potato) and melon farming [111219]" | N_A_I_C == "Mushroom production [111411]" 
-                                        | N_A_I_C == "Other food crops grown under cover [111419]" | N_A_I_C == "Nursery and tree production [111421]" | N_A_I_C == "Floriculture production [111422]" 
-                                        | N_A_I_C == "Other crop farming [1119]" | N_A_I_C == "Tobacco farming [111910]" | N_A_I_C == "Hay farming [111940]" | N_A_I_C == "Fruit and vegetable combination farming [111993]"
-                                        | N_A_I_C == "Maple syrup and products production [111994]" | N_A_I_C == "All other miscellaneous crop farming [111999]" )
+                                        | N_A_I_C == "Oilseed and grain farming [1111]" | N_A_I_C == "Other crop farming [1119]")
 
   # Total the counts of these farm categories by CCS region:
 animal.prod.counts <- aggregate(cbind(VALUE) ~ CCSUID, data= animal.product.farming, FUN=sum)
@@ -262,9 +257,9 @@ ground.crop.sf$Farms_per_sq_km <- as.numeric(as.character(ground.crop.sf$Farms_p
 
 
   # Save these as .shp's for later:
-st_write(animal.prod.sf,"Data/processed/Animal Product Farming.shp")
+st_write(animal.prod.sf,"/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp", append = TRUE)
 
-st_write(ground.crop.sf, "Data/processed/Ground Crop Production.shp") 
+st_write(ground.crop.sf, "/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp", append = TRUE) 
 
 ################################# Prep Grizzly Population Units:
 
@@ -299,7 +294,7 @@ plot(world.dens.reproj)
 
 crs(world.dens.reproj) == crs(soi.rast) #TRUE
 
-soi.reproj <- st_make_valid(soi.10k.boundary) %>% 
+soi.reproj <- st_make_valid(south.int.10k.buf) %>%  # reproject the vector data first to match hum density, then crop using soi.vect, then reproject smaller hum dens raster to match soi rast, then resample
   st_transform(crs=crs(soi.rast))
 
 

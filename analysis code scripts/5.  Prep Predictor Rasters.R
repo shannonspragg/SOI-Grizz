@@ -165,10 +165,6 @@ d2met.rsmpl <- resample(d2met.crop, soi.rast, method='bilinear')
 d2grizz.pop.rsmpl <- resample(d2grizzpop.crop, soi.rast, method='bilinear')
 hm.dens.rsmple <- resample(hm.dens.reproj, soi.rsmple, method='bilinear')
 
-#d2pa.inv.rsmpl <- resample(d2pa.inv.crop, soi.rast, method='bilinear')
-#d2met.inv.rsmpl <- resample(d2met.inv.crop, soi.rast, method='bilinear')
-#d2grizz.pop.inv.rsmpl <- resample(d2grizzpop.inv.crop, soi.rast, method='bilinear')
-
   # Plot Check:
 soi.bound.vect <- vect(soi.bound.reproj)
 
@@ -204,9 +200,6 @@ d2met.soi <- terra::mask(d2met.rsmpl, soi.bound.vect)
 d2grizzpop.soi <- terra::mask(d2grizz.pop.rsmpl, soi.bound.vect) 
 hm.dens.soi <- terra::mask(hm.dens.rsmple, soi.bound.vect) # BEA-UTIFUL!
 
-#d2pa.inv.soi <- terra::mask(d2pa.inv.rsmpl, soi.bound.vect) 
-#d2met.inv.soi <- terra::mask(d2met.inv.rsmpl, soi.bound.vect) 
-#d2grizzpop.inv.soi <- terra::mask(d2grizz.pop.inv.rsmpl, soi.bound.vect) 
 
 plot(biophys.soi)
 plot(bhs.soi)
