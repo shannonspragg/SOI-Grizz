@@ -66,16 +66,15 @@ warp.all.sp<- warp.all.sp %>%
 head(warp.all.sp) # Check this to make sure it looks good
 
   # Making Conflict Data a Spatial Dataframe 
-bc.sp<- structure(warp.all.sp,longitude= "encounter_lng", latitude= "encounter_lat", class="data.frame")
-head(bc.sp)
-xy<-bc.sp[,c(8,7)]
-bears.spdf<-SpatialPointsDataFrame(coords = xy,data = bc.sp,
+xy<-warp.all.sp[,c(8,7)]
+bears.spdf<-SpatialPointsDataFrame(coords = xy,data = warp.all.sp,
                                    proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+head(bears.spdf)
 str(bears.spdf)
 
   # Ensure this is a sf data frame:
 warp.all.sp <- as(bears.spdf, "sf")
-str(warp.all.sp)
+head(warp.all.sp)
 
 # Filter down to Southern Interior Ecoprovince: ---------------------------
   # Here we select for just the southern interior province
