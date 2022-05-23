@@ -14,31 +14,31 @@ library(measurements)
 # Load Data: --------------------------------------------------------------
 
   # Grizzinc:  UPDATE THIS WITH NEW DATA
-grizzinc.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/original/grizz.increase.map.fixed.tif") 
+grizzinc.rast <- terra::rast("Data/original/grizz.increase.map.fixed.tif") 
 
   # Bear Density - Bear Habitat Suitability (BHS):
-bhs.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/grizz_dens.tif")
+bhs.rast <- rast("Data/original/grizz_dens.tif")
 
   # Biophysical Current Map (Cumulative current flow shows the total current for each landscape pixel):
-biophys.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/original/cum_currmap.tif") 
+biophys.rast <- rast("Data/original/cum_currmap.tif") 
 
   # SOI Region for plotting:
-soi.10k.boundary <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km_buf.shp")
-soi.rast <- rast("/Users/shannonspragg/SOI-Grizz/Data/processed/SOI_10km.tif")
+soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
+soi.rast <- rast("Data/processed/SOI_10km.tif")
   
   # PA and Metro Data: (need to be cropped)
-bc.PAs <- st_read("/Users/shannonspragg/SOI-Grizz/Data/original/Parks_Combined2.shp") # Clayton's data
-bc.metro<-st_read("/Users/shannonspragg/SOI-Grizz/Data/original//CNCNSSMTRR_polygon.shp")
+bc.PAs <- st_read("Data/original/Parks_Combined2.shp") # Clayton's data
+bc.metro<-st_read("Data/original//CNCNSSMTRR_polygon.shp")
   
   # Extent Grizzly Populations:
-extent.grizz <- st_read("/Users/shannonspragg/SOI-Grizz/Data/processed/Extent Grizzly Pop Units.shp")
+extent.grizz <- st_read("Data/processed/Extent Grizzly Pop Units.shp")
  
   # Human Density for SOI:
-hm.dens <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens.tif") # SOI Region 10km
+hm.dens <- terra::rast("Data/processed/human_dens.tif") # SOI Region 10km
 
   # Farm Rasters:
-animal.prod.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_raster.tif")
-ground.crop.rast <- terra::rast("/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_raster.tif" )
+animal.prod.rast <- terra::rast("Data/processed/animal_production_density_raster.tif")
+ground.crop.rast <- terra::rast("Data/processed/ground_crop_density_raster.tif" )
 
   
 ################################# First, we need to produce our Distance to PA, Metro, and Grizzly Pop Rasters:
@@ -69,8 +69,8 @@ plot(st_geometry(metro.soi.crop))
 plot(st_geometry(soi.bound.reproj), add=TRUE) # This works
 
   # Save these:
-st_write(PAs.soi.crop, "/Users/shannonspragg/SOI-Grizz/Data/processed/soi.PAs.10km.buf.shp")
-st_write(metro.soi.crop, "/Users/shannonspragg/SOI-Grizz/Data/processed/soi.metro.10km.buf.shp")
+st_write(PAs.soi.crop, "Data/processed/soi.PAs.10km.buf.shp")
+st_write(metro.soi.crop, "Data/processed/soi.metro.10km.buf.shp")
 
   # Buffer our region by 5km, so we have a space of 15km total (to account for PA's just outside of our SOI 10km boundary):
 soi.15km.buf <- soi.bound.reproj %>% 
@@ -111,16 +111,6 @@ names(dist.pa.raster)[names(dist.pa.raster) == "OBJECTID"] <- "Distance to Neare
 names(dist.met.raster)[names(dist.met.raster) == "OBJECTID"] <- "Distance to Nearest Metro (km)"
 names(dist.grizz.pop.raster)[names(dist.grizz.pop.raster) == "OBJECTID"] <- "Distance to Nearest Extent Grizzly Pop (km)"
 
-  # Invert distances: we want the highest raster value to be the closest (lowest distance) to our predictors:
-#dist.pa.rast.invert <- 1 - dist.pa.raster
-#dist.met.rast.invert <- 1 - dist.met.raster
-#dist.grizz.rast.invert <- 1 - dist.grizz.pop.raster
-
-
-  # Plot to check:
-#plot(dist.pa.rast.invert) # This just makes the 0km distance the "highest" value (i.e. closest in proximity)
-#plot(dist.met.rast.invert)
-#plot(dist.grizz.rast.invert)
 
 ######################################## Adjust Farm Rasters:
 
@@ -131,13 +121,13 @@ ground.crop.rast[ground.crop.rast > 1.5] <- 2
 animal.prod.adjusted <- animal.prod.rast
 ground.crop.adjusted <- ground.crop.rast
 
-terra::writeRaster(animal.prod.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/animal_production_density_adjusted.tif")
-terra::writeRaster(ground.crop.adjusted, "/Users/shannonspragg/SOI-Grizz/Data/processed/ground_crop_density_adjusted.tif" )
+terra::writeRaster(animal.prod.adjusted, "Data/processed/animal_production_density_adjusted.tif")
+terra::writeRaster(ground.crop.adjusted, "Data/processed/ground_crop_density_adjusted.tif" )
 
 farm.density.combined <- terra::merge(animal.prod.adjusted, ground.crop.adjusted)
 farm.density.combined[farm.density.combined > 1] <- 1
 
-terra::writeRaster(farm.density.combined, "/Users/shannonspragg/SOI-Grizz/Data/processed/combined_farm_density.tif" )
+terra::writeRaster(farm.density.combined, "Data/processed/combined_farm_density.tif" )
 
 
 ######################################## Now we Match All of our Rasters:
@@ -157,9 +147,6 @@ crs(soi.rast) == crs(grizz.inc.reproj) #TRUE
 crs(grizz.inc.reproj) == crs(grizz.dens.reproj) #TRUE
 crs(biophys.rast) == crs(hm.dens.reproj) #TRUE
 crs(hm.dens.reproj) == crs(dist.pa.rast.invert)
-#crs(dist.pa.rast.invert) == crs(dist.met.rast.invert)
-#crs(dist.met.rast.invert) == crs(dist.grizz.rast.invert)
-
 
   # Crop these Rasters:
 grizzinc.crop <- terra::crop(grizz.inc.reproj, soi.rast)  
@@ -168,11 +155,6 @@ bhs.crop <- terra::crop(bhs.reproj, soi.rast)
 d2pa.crop <- terra::crop(dist.pa.raster, soi.rast)
 d2met.crop <- terra::crop(dist.met.raster, soi.rast)
 d2grizzpop.crop <- terra::crop(dist.grizz.pop.raster, soi.rast)
-
-#d2pa.inv.crop <- terra::crop(dist.pa.rast.invert, soi.rast)
-#d2met.inv.crop <- terra::crop(dist.met.rast.invert, soi.rast)
-#d2grizzpop.inv.crop <- terra::crop(dist.grizz.rast.invert, soi.rast)
-
 
   # Resample to match extents and res:
 grizzinc.rsmple <- resample(grizzinc.crop, soi.rast, method='bilinear')
@@ -242,15 +224,11 @@ names(hm.dens.soi)[names(hm.dens.soi) == "gpw_v4_population_density_adju~ountry_
 
 
 # Save our Cropped Rasters: -----------------------------------------------
-terra::writeRaster(grizzinc.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/grizz_inc_SOI_10km.tif")
-terra::writeRaster(biophys.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/biophys_SOI_10km.tif")
-terra::writeRaster(bhs.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/bhs_SOI_10km.tif")
-terra::writeRaster(d2pa.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/dist2pa_SOI_10km.tif")
-terra::writeRaster(d2met.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/dist2metro_raster.tif" )
-terra::writeRaster(d2grizzpop.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/dist2grizz_pop_raster.tif" )
-terra::writeRaster(hm.dens.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/human_dens_SOI_10km.tif" )
-
-#terra::writeRaster(d2pa.inv.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/dist2pa_Sinvert_raster.tif")
-#terra::writeRaster(d2met.inv.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/dist2metro_invert_raster.tif" )
-#terra::writeRaster(d2grizzpop.inv.soi, "/Users/shannonspragg/SOI-Grizz/Data/processed/dist2grizz_pop_invert_raster.tif" )
+terra::writeRaster(grizzinc.soi, "Data/processed/grizz_inc_SOI_10km.tif")
+terra::writeRaster(biophys.soi, "Data/processed/biophys_SOI_10km.tif")
+terra::writeRaster(bhs.soi, "Data/processed/bhs_SOI_10km.tif")
+terra::writeRaster(d2pa.soi, "Data/processed/dist2pa_SOI_10km.tif")
+terra::writeRaster(d2met.soi, "Data/processed/dist2metro_raster.tif" )
+terra::writeRaster(d2grizzpop.soi, "Data/processed/dist2grizz_pop_raster.tif" )
+terra::writeRaster(hm.dens.soi, "Data/processed/human_dens_SOI_10km.tif" )
 
