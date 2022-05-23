@@ -39,11 +39,7 @@ bc.ecoprovs <- st_read("Data/original/ERC_ECOPRO_polygon.shp")
   # CAN Agriculture Data
 farm.type <- read.csv("Data/original/farm type_32100403.csv")
   # CAN Consolidated Census Subdivisions (CCS):
-<<<<<<< HEAD
 can.ccs.shp<- st_make_valid(st_read("/Users/shannonspragg/SOI-Grizz/Data/original/lccs000b16a_e.shp"))
-=======
-can.ccs.shp<-st_read("Data/original/lccs000b16a_e.shp")
->>>>>>> 63e5afa98b6f712b8d3d2f8171903112f2b2cae3
   # Global Human Density:
 world.hum.dens <- terra::rast("Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_1_deg.tif")
   # Grizzly Population Units:
@@ -161,11 +157,8 @@ bc.ccs<-can.ccs.sf %>%
   st_make_valid()
   
 # Save this for later:
-<<<<<<< HEAD
 st_write(bc.ccs, "/Users/shannonspragg/SOI-Grizz/Data/processed/BC CCS.shp", append = FALSE)
-=======
-st_write(bc.ccs, "Data/processed/BC CCS.shp")
->>>>>>> 63e5afa98b6f712b8d3d2f8171903112f2b2cae3
+
 
 
 # Filter the Ag Files down to just BC districts: --------------------------
@@ -274,15 +267,9 @@ ground.crop.sf$Farms_per_sq_km <- as.numeric(as.character(ground.crop.sf$Farms_p
 
 
   # Save these as .shp's for later:
-<<<<<<< HEAD
 st_write(animal.prod.sf,"/Users/shannonspragg/SOI-Grizz/Data/processed/Animal Product Farming.shp", append = TRUE)
 
 st_write(ground.crop.sf, "/Users/shannonspragg/SOI-Grizz/Data/processed/Ground Crop Production.shp", append = TRUE) 
-=======
-st_write(animal.prod.sf,"Data/processed/Animal Product Farming.shp")
-
-st_write(ground.crop.sf, "Data/processed/Ground Crop Production.shp") 
->>>>>>> 63e5afa98b6f712b8d3d2f8171903112f2b2cae3
 
 ################################# Prep Grizzly Population Units:
 
