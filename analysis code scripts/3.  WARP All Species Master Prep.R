@@ -159,7 +159,7 @@ head(bears.reproj)
 pres.abs.reproj$dist_to_Metro<-conv_unit(pres.abs.reproj$dist_to_Metro,"m","km")
 head(pres.abs.reproj)
 
-  # This added the dist to metro areas column to our data
+# This added the dist to metro areas column to our data
 
 
   # Check for NA's quick:
@@ -175,30 +175,30 @@ which(is.na(pres.abs.reproj$dist_to_Metro))
 # Prep Variable 3: Dist to Extent Grizzly Populations ------------------------------------
 #Calculation of the distance between the grizz pop units and our points
 
-# Do this for our WARP only data:
+  # Do this for our WARP only data:
 dist.pts2grizz.warp <- st_distance(bears.reproj, grizz.pop.reproj)
 head(dist.pts2grizz.warp)
 
-# And the pres-abs data:
+  # And the pres-abs data:
 dist.pts2grizz.presabs <- st_distance(pres.abs.reproj, grizz.pop.reproj)
 head(dist.pts2grizz.presabs)
 
-# Must find the minimum distance to PA's (Distance from conflict point to nearest PA)
+  # Must find the minimum distance to PA's (Distance from conflict point to nearest PA)
 min.dist.grizz.warp <- apply(dist.pts2grizz.warp, 1, min)
 min.dist.grizz.presabs <- apply(dist.pts2grizz.presabs, 1, min)
 
-# Add Distance Variable into Data table
+  # Add Distance Variable into Data table
 bears.reproj$dist_to_GrizzPop<-min.dist.grizz.warp
 head(bears.reproj)
 
 pres.abs.reproj$dist_to_GrizzPop<-min.dist.grizz.presabs
 head(pres.abs.reproj)
 
-# Remove the units from the values (note: in meters)
+  # Remove the units from the values (note: in meters)
 as.numeric(bears.reproj$dist_to_GrizzPop) 
 as.numeric(pres.abs.reproj$dist_to_GrizzPop)
 
-# Convert units from meters to km:
+  # Convert units from meters to km:
 bears.reproj$dist_to_GrizzPop<-conv_unit(bears.reproj$dist_to_GrizzPop,"m","km")
 head(bears.reproj)
 
