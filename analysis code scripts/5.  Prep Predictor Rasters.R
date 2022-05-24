@@ -144,9 +144,8 @@ hm.dens.reproj <- terra::project(hm.dens, crs(soi.rast))
 
 
 crs(soi.rast) == crs(grizz.inc.reproj) #TRUE
-crs(grizz.inc.reproj) == crs(grizz.dens.reproj) #TRUE
+crs(grizz.inc.reproj) == crs(bhs.reproj) #TRUE
 crs(biophys.rast) == crs(hm.dens.reproj) #TRUE
-crs(hm.dens.reproj) == crs(dist.pa.rast.invert)
 
   # Crop these Rasters:
 grizzinc.crop <- terra::crop(grizz.inc.reproj, soi.rast)  
@@ -163,7 +162,7 @@ bhs.rsmple <- resample(bhs.crop, soi.rast, method='bilinear')
 d2pa.rsmpl <- resample(d2pa.crop, soi.rast, method='bilinear')
 d2met.rsmpl <- resample(d2met.crop, soi.rast, method='bilinear')
 d2grizz.pop.rsmpl <- resample(d2grizzpop.crop, soi.rast, method='bilinear')
-hm.dens.rsmple <- resample(hm.dens.reproj, soi.rsmple, method='bilinear')
+hm.dens.rsmple <- resample(hm.dens.reproj, soi.rast, method='bilinear')
 
   # Plot Check:
 soi.bound.vect <- vect(soi.bound.reproj)
