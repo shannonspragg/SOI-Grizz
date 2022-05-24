@@ -69,8 +69,8 @@ plot(st_geometry(metro.soi.crop))
 plot(st_geometry(soi.bound.reproj), add=TRUE) # This works
 
   # Save these:
-st_write(PAs.soi.crop, "Data/processed/soi.PAs.10km.buf.shp")
-st_write(metro.soi.crop, "Data/processed/soi.metro.10km.buf.shp")
+st_write(PAs.soi.crop, "Data/processed/soi.PAs.10km.buf.shp", append = FALSE)
+st_write(metro.soi.crop, "Data/processed/soi.metro.10km.buf.shp", append = FALSE)
 
   # Buffer our region by 5km, so we have a space of 15km total (to account for PA's just outside of our SOI 10km boundary):
 soi.15km.buf <- soi.bound.reproj %>% 
@@ -121,20 +121,20 @@ ground.crop.rast[ground.crop.rast > 1.5] <- 2
 animal.prod.adjusted <- animal.prod.rast
 ground.crop.adjusted <- ground.crop.rast
 
-terra::writeRaster(animal.prod.adjusted, "Data/processed/animal_production_density_adjusted.tif")
-terra::writeRaster(ground.crop.adjusted, "Data/processed/ground_crop_density_adjusted.tif" )
+terra::writeRaster(animal.prod.adjusted, "Data/processed/animal_production_density_adjusted.tif", overwrite = TRUE)
+terra::writeRaster(ground.crop.adjusted, "Data/processed/ground_crop_density_adjusted.tif", overwrite = TRUE)
 
 farm.density.combined <- terra::merge(animal.prod.adjusted, ground.crop.adjusted)
 farm.density.combined[farm.density.combined > 1] <- 1
 
-terra::writeRaster(farm.density.combined, "Data/processed/combined_farm_density.tif" )
+terra::writeRaster(farm.density.combined, "Data/processed/combined_farm_density.tif", overwrite = TRUE )
 
 
 ######################################## Now we Match All of our Rasters:
 
 # Check Projections: ------------------------------------------------------
   # GrizzInc Map:
-grizz.inc.reproj <- terra::project(grizz.inc.rast, crs(soi.rast))  
+grizz.inc.reproj <- terra::project(grizzinc.rast, crs(soi.rast))  
   # Bear Density (BHS) Estimate:
 bhs.reproj <- terra::project(bhs.rast, crs(soi.rast))
   # Biophys Map:
@@ -217,11 +217,11 @@ names(hm.dens.soi)[names(hm.dens.soi) == "gpw_v4_population_density_adju~ountry_
 
 
 # Save our Cropped Rasters: -----------------------------------------------
-terra::writeRaster(grizzinc.soi, "Data/processed/grizz_inc_SOI_10km.tif")
-terra::writeRaster(biophys.soi, "Data/processed/biophys_SOI_10km.tif")
-terra::writeRaster(bhs.soi, "Data/processed/bhs_SOI_10km.tif")
-terra::writeRaster(d2pa.soi, "Data/processed/dist2pa_SOI_10km.tif")
-terra::writeRaster(d2met.soi, "Data/processed/dist2metro_raster.tif" )
-terra::writeRaster(d2grizzpop.soi, "Data/processed/dist2grizz_pop_raster.tif" )
-terra::writeRaster(hm.dens.soi, "Data/processed/human_dens_SOI_10km.tif" )
+terra::writeRaster(grizzinc.soi, "Data/processed/grizz_inc_SOI_10km.tif", overwrite = TRUE)
+terra::writeRaster(biophys.soi, "Data/processed/biophys_SOI_10km.tif", overwrite = TRUE)
+terra::writeRaster(bhs.soi, "Data/processed/bhs_SOI_10km.tif", overwrite = TRUE)
+terra::writeRaster(d2pa.soi, "Data/processed/dist2pa_SOI_10km.tif", overwrite = TRUE)
+terra::writeRaster(d2met.soi, "Data/processed/dist2metro_raster.tif", overwrite = TRUE )
+terra::writeRaster(d2grizzpop.soi, "Data/processed/dist2grizz_pop_raster.tif", overwrite = TRUE )
+terra::writeRaster(hm.dens.soi, "Data/processed/human_dens_SOI_10km.tif", overwrite = TRUE )
 
