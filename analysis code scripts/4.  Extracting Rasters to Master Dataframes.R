@@ -60,7 +60,7 @@ crs(biophys.cum.curmap) == crs(soi.rast) # Nice, this worked --> now in BC Alber
 # Nice, this worked --> now in BC Albers EPSG 3005
   # Human Density:
 hm.dens.reproj <- terra::project(hm.dens, crs(soi.rast))
-crs(hm.dens.soi) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
+crs(hm.dens.reproj) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
 
   # Project SOI boundary:
 soi.reproj <- st_make_valid(soi.10k.boundary) %>% 
@@ -83,7 +83,7 @@ res(grizz.dens) # 1000 x 1000
 res(biophys.cum.curmap) # 1000 x 1000
 res(grizz.inc.rast) # 270 x 270
 res(soi.rast) # 271 x 271
-res(hm.dens.soi) # 271 x 271
+res(hm.dens.reproj) # 271 x 271
 
 # Buffer the WARP Points (Before Overlay) --------------------------------------------------
 # Here we buffer the WARP and ppres-abs points by 5km before extracting the attributes from the current maps
@@ -99,7 +99,7 @@ plot(st_geometry(pres.abs.buf)) # Check the buffers
 # Let's Turn the Buffered Points into a SpatVector:
 warp.sv.buf <- vect(warp.all.buf)
 pres.abs.sv.buf <- vect(pres.abs.buf)
-soi.sv <- vect(soi.bound.reproj)
+soi.sv <- vect(soi.reproj)
 
 # Plot them together to see if projection truly is same:
 plot(grizz.inc.reproj)
@@ -173,6 +173,8 @@ plot(hm.dens.rsmple)
 plot(st_geometry(pres.abs.reproj[5921,]), add= TRUE) # these are outside data window
 
 pres.abs.reproj <- pres.abs.reproj %>% drop_na(Human_Dens)  
+
+which(is.na(pres.abs.reproj$Human_Dens)) # fixed
 
 # Save this as new file ---------------------------------------------------
 
