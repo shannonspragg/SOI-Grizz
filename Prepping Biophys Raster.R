@@ -67,3 +67,16 @@ fuzzysum2 <- function(r1, r2) {
 # Add together our biophys attributes: gHM and roughness
 biophys_fuzsum <- fuzzysum2(hmi.rescale, rough.rescale)
 plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "BHS+gHM Resistance Layer")
+
+# Make into resistance surface
+biophys_resistance <- (1+biophys_fuzsum)^10
+plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "Biophysical Resistance Layer")
+
+# Save Biophys for Circuitscape Run: -----------------------------------------
+writeRaster(hmi.rescale, filename=here("data/processed/hmi_rescale.tif"), overwrite=TRUE)
+writeRaster(rough.rescale, filename=here("data/processed/roughness_rescale.tif"), overwrite=TRUE)
+writeRaster(biophys_fuzsum, filename=here("data/processed/biophys_comnined.tif"), overwrite=TRUE)
+
+writeRaster(biophys_resistance, filename=here("data/processed/biophys_resist.tif"), overwrite=TRUE)
+
+
