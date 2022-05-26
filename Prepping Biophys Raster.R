@@ -41,6 +41,7 @@ griz.ext[is.nan(griz.ext)] <- 0
 # Project & Crop HMI:
 #hmi.proj <- terra::project(hmi, griz.dens, method="bilinear")
 hmi.crop <- crop(hmi, bc.vect)
+grizz.crop <- crop(griz_proj, bc.vect)
 
 # Rescale HMI:
 hmi.rescale <- hmi.crop / 65536
@@ -72,11 +73,21 @@ plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "BHS+gHM Resistance La
 biophys_resistance <- (1+biophys_fuzsum)^10
 plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "Biophysical Resistance Layer")
 
+# Project these back to BC Albers:
+grizz.reproj <- project(grizz.crop, griz_dens)
+biophys.resist.reproj <- project(biophys_resistance, griz_dens)
+bc.vect.reproj <- project(bc.vect, griz_dens)
+
+# Crop to our extent:
+biophys.resist.crop <- crop(biophys.resist.reproj, bc.vect.reproj)
+grizz.crop <- crop(grizz.reproj, bc.vect.reproj)
+
 # Save Biophys for Circuitscape Run: -----------------------------------------
 writeRaster(hmi.rescale, filename=here("data/processed/hmi_rescale.tif"), overwrite=TRUE)
 writeRaster(rough.rescale, filename=here("data/processed/roughness_rescale.tif"), overwrite=TRUE)
-writeRaster(biophys_fuzsum, filename=here("data/processed/biophys_comnined.tif"), overwrite=TRUE)
 
-writeRaster(biophys_resistance, filename=here("data/processed/biophys_resist.tif"), overwrite=TRUE)
+writeRaster(biophys_fuzsum, filename=here("data/processed/biophys_comnined.tif"), overwrite=TRUE)
+writeRaster(grizz.crop, filename=here("data/processed/grizz_dens_crop.tif"), overwrite=TRUE)
+writeRaster(biophys.resist.crop, filename=here("data/processed/biophys_resist_soi.tif"), overwrite=TRUE)
 
 
