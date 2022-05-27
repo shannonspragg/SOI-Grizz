@@ -29,8 +29,6 @@ elev <- mosaic(elev.can, elev.us)
 griz_proj <- terra::project(griz_dens, hmi)
 soi_proj.sp <- soi_bdry %>% st_transform(., crs(griz_proj)) %>% st_buffer(., dist=5000) %>% as(., "Spatial")
 soi_proj.vec <- vect(soi_proj.sp)
-bc_proj.sp <- bc_bdry %>% st_transform(., crs(griz_proj)) %>% st_buffer(., dist=5000) %>% as(., "Spatial")
-bc.vect <- vect(bc_proj.sp)
 
 # Prep Other Rasters: -----------------------------------------------------
 
