@@ -26,7 +26,7 @@ elev <- mosaic(elev.can, elev.us)
 
 
 # Reproject the SOI shapefile boundary
-griz_proj <- project(griz_dens, hmi)
+griz_proj <- terra::project(griz_dens, hmi)
 soi_proj.sp <- soi_bdry %>% st_transform(., crs(griz_proj)) %>% st_buffer(., dist=5000) %>% as(., "Spatial")
 soi_proj.vec <- vect(soi_proj.sp)
 bc_proj.sp <- bc_bdry %>% st_transform(., crs(griz_proj)) %>% st_buffer(., dist=5000) %>% as(., "Spatial")
@@ -39,16 +39,15 @@ griz.ext <- terra::extend(griz_proj, soi_proj.vec, filename=here("data/processed
 griz.ext[is.nan(griz.ext)] <- 0
 
 # Project & Crop HMI:
-#hmi.proj <- terra::project(hmi, griz.dens, method="bilinear")
-hmi.crop <- crop(hmi, bc.vect)
-grizz.crop <- crop(griz_proj, bc.vect)
+hmi.crop <- crop(hmi, soi_proj.vec)
+grizz.crop <- crop(griz.ext, soi_proj.vec)
 
 # Rescale HMI:
 hmi.rescale <- hmi.crop / 65536
 
 # Project & Crop Elev:
-elev.proj <- terra::project(elev, griz_proj, method="bilinear")
-elev.crop <- crop(elev.proj, bc.vect)
+elev.proj <- terra::project(elev, griz_proj)
+elev.crop <- crop(elev.proj, soi_proj.vec)
 rough <- terrain(elev.crop, v="TRI")
 rough.max <-  global(rough, "max", na.rm=TRUE)[1,]
 rough.min <-  global(rough, "min", na.rm=TRUE)[1,]
@@ -74,13 +73,13 @@ biophys_resistance <- (1+biophys_fuzsum)^10
 plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "Biophysical Resistance Layer")
 
 # Project these back to BC Albers:
-grizz.reproj <- project(grizz.crop, griz_dens)
-biophys.resist.reproj <- project(biophys_resistance, griz_dens)
-bc.vect.reproj <- project(bc.vect, griz_dens)
+grizz.reproj <- terra::project(grizz.crop, griz_dens)
+biophys.resist.reproj <- terra::project(biophys_resistance, griz_dens)
+soi.vect.reproj <- terra::project(soi_proj.vec, griz_dens)
 
 # Crop to our extent:
-biophys.resist.crop <- crop(biophys.resist.reproj, bc.vect.reproj)
-grizz.crop <- crop(grizz.reproj, bc.vect.reproj)
+biophys.resist.crop <- crop(biophys.resist.reproj, soi.vect.reproj)
+grizz.crop <- crop(grizz.reproj, soi.vect.reproj)
 
 # Save Biophys for Circuitscape Run: -----------------------------------------
 writeRaster(hmi.rescale, filename=here("data/processed/hmi_rescale.tif"), overwrite=TRUE)
