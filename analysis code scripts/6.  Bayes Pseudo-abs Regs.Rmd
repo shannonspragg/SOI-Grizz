@@ -87,8 +87,8 @@ scale2sd <-function(variable){(variable - mean(variable, na.rm=TRUE))/(2*sd(vari
 dist.2.pa.ps <- scale2sd(warp.pres.abs$dst__PA)
 dist.2.met.ps <- scale2sd(warp.pres.abs$dst_t_M)
 pop.dens <- scale2sd(warp.pres.abs$Human_Dens)
-animal.farm.dens.ps <- warp.pres.abs$Anml_Fr
-ground.crop.dens.ps <- warp.pres.abs$Grnd_Cr
+animal.farm.dens.ps <- scale2sd(warp.pres.abs$Anml_Fr)
+ground.crop.dens.ps <- scale2sd(warp.pres.abs$Grnd_Cr)
 
 conflict_presence_ps <- warp.pres.abs$bears # Binomial bears --> for this data, 1's are all wildlife
 
