@@ -79,16 +79,15 @@ soi.vect.reproj <- terra::project(soi_proj.vec, griz_dens)
 biophys.resist.crop <- crop(biophys.resist.reproj, soi.vect.reproj)
 grizz.crop <- crop(grizz.reproj, soi.vect.reproj)
 
-# Mask to SOI:
-#biophys.resist.soi <- terra::mask(biophys.resist.crop, soi.vect.reproj)
-#grizz.soi <- terra::mask(grizz.crop, soi.vect.reproj)
 
 # Save Biophys for Circuitscape Run: -----------------------------------------
 writeRaster(hmi.rescale, filename=here("data/processed/hmi_rescale.tif"), overwrite=TRUE)
 writeRaster(rough.rescale, filename=here("data/processed/roughness_rescale.tif"), overwrite=TRUE)
 
 writeRaster(biophys_fuzsum, filename=here("data/processed/biophys_comnined.tif"), overwrite=TRUE)
-writeRaster(grizz.soi, filename=here("data/processed/grizz_dens_crop.tif"), overwrite=TRUE)
-writeRaster(biophys.resist.soi, filename=here("data/processed/biophys_resist_soi.tif"), overwrite=TRUE)
+
+  # Omniscape Inputs:
+writeRaster(grizz.soi, filename=here("data/processed/grizz_dens_crop.tif"), overwrite=TRUE) # source input for omniscape
+writeRaster(biophys.resist.soi, filename=here("data/processed/biophys_resist_soi.tif"), overwrite=TRUE) # resist input for omniscape
 
 
