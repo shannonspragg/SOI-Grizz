@@ -117,7 +117,6 @@ plot(pres.abs.sv.buf, add = TRUE)
 
 # Crop these Rasters:
 grizzinc.crop <- terra::crop(grizz.inc.reproj, soi.rast)  
-biophys.crop <- terra::crop(biophys.reproj, soi.rast)
 bhs.crop <- terra::crop(grizz.dens.reproj, soi.rast)
 
 plot(grizzinc.crop)
@@ -125,7 +124,7 @@ plot(biophys.crop)
 plot(bhs.crop)
 
 # Resample to match extents and res ( we want to match to the grizzinc res):
-biophys.rsmple <- resample(biophys.crop, soi.rast, method='bilinear')
+biophys.rsmple <- resample(biophys.reproj, soi.rast, method='bilinear')
 bhs.rsmple <- resample(bhs.crop, soi.rast, method='bilinear')
 hm.dens.rsmple <- resample(hm.dens.reproj, soi.rast, method='bilinear')
 grizzinc.rsmple <- resample(grizzinc.crop, soi.rast, method='bilinear')
