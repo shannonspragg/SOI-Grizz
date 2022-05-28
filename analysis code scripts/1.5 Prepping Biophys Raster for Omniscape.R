@@ -80,8 +80,8 @@ biophys.resist.crop <- crop(biophys.resist.reproj, soi.vect.reproj)
 grizz.crop <- crop(grizz.reproj, soi.vect.reproj)
 
 # Mask to SOI:
-biophys.resist.soi <- terra::mask(biophys.resist.crop, soi.vect.reproj)
-grizz.soi <- terra::mask(grizz.crop, soi.vect.reproj)
+#biophys.resist.soi <- terra::mask(biophys.resist.crop, soi.vect.reproj)
+#grizz.soi <- terra::mask(grizz.crop, soi.vect.reproj)
 
 # Save Biophys for Circuitscape Run: -----------------------------------------
 writeRaster(hmi.rescale, filename=here("data/processed/hmi_rescale.tif"), overwrite=TRUE)
