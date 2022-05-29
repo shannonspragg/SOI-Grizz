@@ -8,9 +8,8 @@
 
 # Load Packages -----------------------------------------------------------
 library(sf)
-library(raster)
+#library(raster)
 library(tidyverse)
-library(dplyr)
 library(sp)
 library(terra)
 library(rgdal)
@@ -27,7 +26,7 @@ biophys.cum.curmap <- rast("Data/original/cum_currmap.tif") # use this one
   # Normalized shows the degree to which a pixel has more or less current than expected under resistance-free conditions (cumulative current flow divided by flow potential)
 
   # Just survey response layer (not CS):
-grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
+grizz.inc.rast <- rast("Data/original/grizz_inc_updated.tif") #  the proportion of people within a census that 
 
   # responded “I would like to see grizzlies increase or increase substantially” in response to “how would you like to see grizzly 
   # populations respond in the next several years?” 
@@ -38,60 +37,69 @@ plot(grizz.dens)
 
   # SOI Boundary and Raster for template:
 soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
-soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
+#soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
 
  # Human Density for SOI:
-hm.dens <- terra::rast("Data/processed/human_dens.tif") # SOI Region 10km
+hm.dens <- terra::rast("Data/processed/human_dens_crop.tif") # SOI Region 10km
 
 
 # Check / Set CRS for Raster and Points -----------------------------------
   # Match the projection and CRS of the current map to the resistance maps:
-  # Here we use the grizz.inc raster to be the template crs
+#only hm.dens and griz increas rast are in the wrong projection
+grizz.dens.crop <- terra::crop(grizz.dens, vect(soi.10k.boundary), mask=TRUE)
+biophys.curmap.crop <- terra::crop(biophys.cum.curmap, vect(soi.10k.boundary), mask=TRUE)
+hm.dens.proj <- terra::project(hm.dens, grizz.dens.crop)
+griz.inc.crop <- terra::crop(grizz.inc.rast, terra::project(vect(soi.10k.boundary), grizz.inc.rast), mask=TRUE)
+griz.inc.proj <- terra::project(griz.inc.crop, grizz.dens.crop)
 
 # GrizzInc Map:
-grizz.inc.reproj <- terra::project(grizz.inc.rast, crs(soi.rast))
-crs(grizz.inc.reproj) == crs(soi.rast) 
+#grizz.inc.reproj <- terra::project(grizz.inc.rast, crs(soi.rast))
+#crs(grizz.inc.reproj) == crs(soi.rast) 
   # Bear Density (BHS) Estimate:
-grizz.dens.reproj <- terra::project(grizz.dens, crs(soi.rast))
-crs(grizz.dens) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
+#grizz.dens.reproj <- terra::project(grizz.dens, crs(soi.rast))
+#crs(grizz.dens) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
   # Biophys Map:
-biophys.reproj <- terra::project(biophys.cum.curmap, crs(soi.rast))
-crs(biophys.cum.curmap) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
+#biophys.reproj <- terra::project(biophys.cum.curmap, crs(soi.rast))
+#crs(biophys.cum.curmap) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
 # Nice, this worked --> now in BC Albers EPSG 3005
   # Human Density:
-hm.dens.reproj <- terra::project(hm.dens, crs(soi.rast))
-crs(hm.dens.reproj) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
+
+#hm.dens.reproj <- terra::project(hm.dens, crs(soi.rast))
+#crs(hm.dens.soi) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
+
 
   # Project SOI boundary:
-soi.reproj <- st_make_valid(soi.10k.boundary) %>% 
-  st_transform(crs=crs(soi.rast))
+#soi.reproj <- st_make_valid(soi.10k.boundary) %>% 
+#  st_transform(crs=crs(soi.rast))
 
-st_crs(warp.all.sp) # This is in NAD83 BC Albers - EPSG 3005
+#st_crs(warp.all.sp) # This is in NAD83 BC Albers - EPSG 3005
 
   # Match the sf points CRS directly to the template raster:
-warp.reproj <- st_make_valid(warp.all.sp) %>% 
-  st_transform(crs=crs(soi.rast))
+#warp.reproj <- st_make_valid(warp.all.sp) %>% 
+#  st_transform(crs=crs(soi.rast))
 
-pres.abs.reproj <- st_make_valid(pres.abs.master) %>% 
-  st_transform(crs=crs(soi.rast))
-st_crs(pres.abs.reproj)
-st_crs(warp.reproj)
-crs(soi.rast) # The same as above, just formatted differently - success!
+#pres.abs.reproj <- st_make_valid(pres.abs.master) %>% 
+#  st_transform(crs=crs(soi.rast))
+#st_crs(pres.abs.reproj)
+#st_crs(warp.reproj)
+#crs(soi.rast) # The same as above, just formatted differently - success!
 
   # Check Raster Resolutions:
-res(grizz.dens) # 1000 x 1000
-res(biophys.cum.curmap) # 1000 x 1000
-res(grizz.inc.rast) # 270 x 270
-res(soi.rast) # 271 x 271
-res(hm.dens.reproj) # 271 x 271
+
+#res(grizz.dens) # 1000 x 1000
+#res(biophys.cum.curmap) # 1000 x 1000
+#res(grizz.inc.rast) # 270 x 270
+#res(soi.rast) # 271 x 271
+#res(hm.dens.soi) # 271 x 271
+
 
 # Buffer the WARP Points (Before Overlay) --------------------------------------------------
 # Here we buffer the WARP and ppres-abs points by 5km before extracting the attributes from the current maps
-warp.all.buf <- warp.reproj %>% 
+warp.all.buf <- warp.all.sp %>% 
   st_buffer(., 5000)
 plot(st_geometry(warp.all.buf)) # Check the buffers
 
-pres.abs.buf <- pres.abs.reproj %>% 
+pres.abs.buf <- pres.abs.master %>% 
   st_buffer(., 5000)
 plot(st_geometry(pres.abs.buf)) # Check the buffers
 
@@ -99,7 +107,9 @@ plot(st_geometry(pres.abs.buf)) # Check the buffers
 # Let's Turn the Buffered Points into a SpatVector:
 warp.sv.buf <- vect(warp.all.buf)
 pres.abs.sv.buf <- vect(pres.abs.buf)
-soi.sv <- vect(soi.reproj)
+
+#soi.sv <- vect(soi.bound.reproj)
+
 
 # Plot them together to see if projection truly is same:
 plot(grizz.inc.reproj)
@@ -116,67 +126,77 @@ plot(pres.abs.sv.buf, add = TRUE)
 
 
 # Crop these Rasters:
-grizzinc.crop <- terra::crop(grizz.inc.reproj, soi.rast)  
-bhs.crop <- terra::crop(grizz.dens.reproj, soi.rast)
+#grizzinc.crop <- terra::crop(grizz.inc.reproj, soi.rast)  
+#biophys.crop <- terra::crop(biophys.reproj, soi.rast)
+#bhs.crop <- terra::crop(grizz.dens.reproj, soi.rast)
 
-plot(grizzinc.crop)
-plot(biophys.crop)
-plot(bhs.crop)
+
+#plot(grizzinc.crop)
+#plot(biophys.crop)
+#plot(bhs.crop)
 
 # Resample to match extents and res ( we want to match to the grizzinc res):
-biophys.rsmple <- resample(biophys.reproj, soi.rast, method='bilinear')
-bhs.rsmple <- resample(bhs.crop, soi.rast, method='bilinear')
-hm.dens.rsmple <- resample(hm.dens.reproj, soi.rast, method='bilinear')
-grizzinc.rsmple <- resample(grizzinc.crop, soi.rast, method='bilinear')
 
-plot(biophys.rsmple)
-plot(bhs.rsmple)
-plot(hm.dens.rsmple)
-plot(grizzinc.rsmple)
+#biophys.rsmple <- resample(biophys.crop, soi.rast, method='bilinear')
+#bhs.rsmple <- resample(bhs.crop, soi.rast, method='bilinear')
+#hm.dens.rsmple <- resample(hm.dens.reproj, soi.rast, method='bilinear')
+#grizzinc.rsmple <- resample(grizzinc.crop, soi.rast, method='bilinear')
+
+
+#plot(biophys.rsmple)
+#plot(bhs.rsmple)
+#plot(hm.dens.rsmple)
+#plot(grizzinc.rsmple)
 
 # Overlay WARP Points with CS Raster  --------------------------------------
 # Here we extract the mean values from each raster to the buffered points
-warp.biophys.b.ext <- terra::extract(biophys.rsmple, warp.sv.buf, mean, na.rm = TRUE)  # This gives us the mean value of each buffered area --> what we want!
-warp.grizz.inc.b.ext <- terra::extract(grizzinc.rsmple, warp.sv.buf, mean, na.rm = TRUE) 
-warp.bhs.b.extract <- terra::extract(bhs.rsmple, warp.sv.buf, mean, na.rm = TRUE) 
-warp.dens.b.ext <- terra::extract(hm.dens.rsmple, warp.sv.buf, mean, na.rm = TRUE) 
+warp.biophys.b.ext <- terra::extract(biophys.curmap.crop, warp.sv.buf, mean, na.rm = TRUE)  # This gives us the mean value of each buffered area --> what we want!
+warp.grizz.inc.b.ext <- terra::extract(griz.inc.proj, warp.sv.buf, mean, na.rm = TRUE) 
+warp.bhs.b.extract <- terra::extract(grizz.dens.crop, warp.sv.buf, mean, na.rm = TRUE) 
+warp.dens.b.ext <- terra::extract(hm.dens.proj, warp.sv.buf, mean, na.rm = TRUE) 
 
-pres.abs.biophys.b.ext <- terra::extract(biophys.rsmple, pres.abs.sv.buf, mean, na.rm = TRUE)  # This gives us the mean value of each buffered area --> what we want!
-pres.abs.grizz.inc.b.ext <- terra::extract(grizzinc.rsmple, pres.abs.sv.buf, mean, na.rm = TRUE) 
-pres.abs.bhs.b.extract <- terra::extract(bhs.rsmple, pres.abs.sv.buf, mean, na.rm = TRUE) 
-pres.abs.dens.b.ext <- terra::extract(hm.dens.rsmple, pres.abs.sv.buf, mean, na.rm = TRUE) 
+pres.abs.biophys.b.ext <- terra::extract(biohphys.curmap.crop, pres.abs.sv.buf, mean, na.rm = TRUE)  # This gives us the mean value of each buffered area --> what we want!
+pres.abs.grizz.inc.b.ext <- terra::extract(griz.inc.proj, pres.abs.sv.buf, mean, na.rm = TRUE) 
+pres.abs.bhs.b.extract <- terra::extract(grizz.dens.crop, pres.abs.sv.buf, mean, na.rm = TRUE) 
+pres.abs.dens.b.ext <- terra::extract(hm.dens.proj, pres.abs.sv.buf, mean, na.rm = TRUE) 
 
 # Create New Column(s) for Extracted Values:
-warp.reproj$Biophys <- warp.biophys.b.ext[,2]  
-warp.reproj$GrizzInc <- warp.grizz.inc.b.ext[,2]
-warp.reproj$BHS <- warp.bhs.b.extract[,2]
-warp.reproj$Human_Dens <- warp.dens.b.ext[,2] # Number of persons per square kilometer
+warp.all.sp$Biophys <- warp.biophys.b.ext[,2]  
+warp.all.sp$GrizzInc <- warp.grizz.inc.b.ext[,2]
+warp.all.sp$BHS <- warp.bhs.b.extract[,2]
+warp.all.sp$Human_Dens <- warp.dens.b.ext[,2] # Number of persons per square kilometer
 
-pres.abs.reproj$Biophys <- pres.abs.biophys.b.ext[,2]
-pres.abs.reproj$GrizzInc <- pres.abs.grizz.inc.b.ext[,2]
-pres.abs.reproj$BHS <- pres.abs.bhs.b.extract[,2]
-pres.abs.reproj$Human_Dens <- pres.abs.dens.b.ext[,2] 
+pres.abs.master$Biophys <- pres.abs.biophys.b.ext[,2]
+pres.abs.master$GrizzInc <- pres.abs.grizz.inc.b.ext[,2]
+pres.abs.master$BHS <- pres.abs.bhs.b.extract[,2]
+pres.abs.master$Human_Dens <- pres.abs.dens.b.ext[,2] 
 
 # Check for NA's:
-which(is.na(warp.reproj$Biophys)) #none
-which(is.na(warp.reproj$BHS)) #none
-which(is.na(warp.reproj$GrizzInc)) # none
-which(is.na(warp.reproj$Human_Dens)) 
+which(is.na(warp.all.sp$Biophys)) #none
+which(is.na(warp.all.sp$BHS)) #none
+which(is.na(warp.all.sp$GrizzInc)) # none
+which(is.na(warp.all.sp$Human_Dens)) 
 
-which(is.na(pres.abs.reproj$Biophys)) #none
-which(is.na(pres.abs.reproj$BHS)) #none
-which(is.na(pres.abs.reproj$GrizzInc)) # none
-which(is.na(pres.abs.reproj$Human_Dens)) 
+which(is.na(pres.abs.master$Biophys)) #none
+which(is.na(pres.abs.master$BHS)) #none
+which(is.na(pres.abs.master$GrizzInc)) # none
+which(is.na(pres.abs.master$Human_Dens)) 
 
-plot(hm.dens.rsmple)
-plot(st_geometry(pres.abs.reproj[5921,]), add= TRUE) # these are outside data window
+#plot(hm.dens.rsmple)
+#plot(st_geometry(pres.abs.reproj[5921,]), add= TRUE) # these are outside data window
 
-pres.abs.reproj <- pres.abs.reproj %>% drop_na(Human_Dens)  
+#pres.abs.reproj <- pres.abs.reproj %>% drop_na(Human_Dens)  
 
 which(is.na(pres.abs.reproj$Human_Dens)) # fixed
 
 # Save this as new file ---------------------------------------------------
 
-st_write(warp.reproj, "Data/processed/warp.final.shp")
-st_write(pres.abs.reproj, "Data/processed/pres.abs.final.shp")
+st_write(warp.all.sp, "Data/processed/warp_final.shp", append = FALSE)
+st_write(pres.abs.master, "Data/processed/pres_abs_final.shp")
 
+# Save projected cropped rasters ------------------------------------------
+
+terra::writeRaster(griz.inc.proj, "Data/processed/grizz_inc_SOI_10km.tif", overwrite=TRUE)
+terra::writeRaster(biophys.curmap.crop, "Data/processed/biophys_SOI_10km.tif", overwrite=TRUE)
+terra::writeRaster(grizz.dens.crop, "Data/processed/bhs_SOI_10km.tif")
+terra::writeRaster(hm.dens.proj, "Data/processed/human_dens_SOI_10km.tif" )

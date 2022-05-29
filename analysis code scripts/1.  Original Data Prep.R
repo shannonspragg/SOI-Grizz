@@ -29,6 +29,12 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("Data/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
+folder_url <- "https://drive.google.com/drive/folders/1pvMatdKYeUdGAxME5y3zO-jfit1T8aC3" # Canada PAs gdb
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("Data/original/CPCAD-BDCAPC_Dec2020.gdb/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 # Bring in our Original Data --------------------------------------------
 
@@ -251,8 +257,8 @@ ground.crop.sf <- ground.crop.production %>%
 
   # Calculate our areas for the two objects: 
   # Make our area units kilometers:
-animal.prod.sf$AREA_SQ_KM <- set_units(st_area(animal.prod.sf), km^2)
-ground.crop.sf$AREA_SQ_KM <- set_units(st_area(ground.crop.sf), km^2)
+animal.prod.sf$AREA_SQ_KM <- units::set_units(st_area(animal.prod.sf), km^2)
+ground.crop.sf$AREA_SQ_KM <- units::set_units(st_area(ground.crop.sf), km^2)
 
   # Now we make a new col with our farms per sq km:
 animal.prod.sf$Farms_per_sq_km <- animal.prod.sf$`Total Farms in CCS` / animal.prod.sf$AREA_SQ_KM

@@ -4,23 +4,22 @@
   #  the general conflict regression (with pres-abs points), and the second for the bear conflict regression (warp-only points)
 
 
-# Loadport Packages -------------------------------------------------------
+# Load Packages -------------------------------------------------------
 library(tidyverse)
-library(dplyr)
 library(sf)
 library(sp)
 library(rgeos)
-library(raster)
+#library(raster)
 library(rgdal)
-library(fasterize)
+#library(fasterize)
 library(terra)
-library(stars)
+#library(stars)
 library(measurements)
 
 # Bring in the Points Data -------------------------------
   #  WARP SOI 10km Buffer Data:
 warp.all<-st_read("Data/processed/warp_crop_10km_buf.shp") 
-head(warp.all)
+#head(warp.all)
   # Bring in our pres abs data frame to get variables for our absences:
 warp.pres.abs <- st_read("Data/processed/warp_pres.abs.shp")
 
@@ -29,7 +28,21 @@ warp.pres.abs <- st_read("Data/processed/warp_pres.abs.shp")
   # Our SOI 10km Buffered Boundary:
 soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
   # Filtered BC Protected Areas:
-bc.PAs <- st_read("Data/original/Parks_Combined2.shp") # Clayton's data
+fgdb <- "Data/original/CPCAD-BDCAPC_Dec2020.gdb"
+fc <- readOGR(dsn=fgdb,layer="CPCAD_Dec2020")
+fc.sf <- as(fc, "sf")
+bc.PAs <- fc.sf %>% 
+  filter(., LOC_E == "British Columbia") 
+
+# Filter by IUCN status (Muise et al., 2022 https://esajournals.onlinelibrary.wiley.com/doi/10.1002/eap.2603)
+bc.PAs.iucn.filtered <- bc.PAs %>% 
+  filter(., IUCN_CAT == "Ia" | IUCN_CAT == "Ib" | IUCN_CAT == "II" | IUCN_CAT == "IV") %>% 
+  st_make_valid()
+bc.PAs.iucn.filtered$areaha <- st_area(bc.PAs.iucn.filtered) 
+units(bc.PAs.iucn.filtered$areaha) <- units::make_units(ha)
+bc.PAs.iucn.filtered$areaha <- as.numeric(bc.PAs.iucn.filtered$areaha) 
+# Filter by PA's larger than 100 ha:
+bc.PAs <- filter(bc.PAs.iucn.filtered, areaha > 100) 
 
   # BC Metropolitan Areas:
 bc.metro<-st_read("Data/original/CNCNSSMTRR_polygon.shp")
@@ -44,33 +57,34 @@ ground.crop.sf <- st_read("Data/processed/Ground Crop Production.shp")
 bc.ccs<-st_read("Data/processed/BC CCS.shp")
 str(bc.ccs)
 
-  # Extent Grizzly Populations:
-extent.grizz <- st_read("Data/processed/Extent Grizzly Pop Units.shp")
+  # Extant Grizzly Populations:
+extant.grizz <- st_read("Data/processed/Extant Grizzly Pop Units.shp")
 
   # SOI Raster for rasterizing later:
-soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
-
-
+#soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
+bear.hab <- rast("Data/original/grizz_dens.tif")
+sa.vect.proj <- project(vect(soi.10k.boundary), bear.hab)
+bear.sa <- crop(bear.hab, sa.vect.proj, mask=TRUE)
 # Reproject All Data ------------------------------------------------------
   # Now we project data to match the template raster:
 
 bears.reproj <- st_make_valid(warp.all) %>%  # our warp data
-  st_transform(crs=crs(soi.rast))
+  st_transform(crs=crs(bear.sa))
 pres.abs.reproj <- st_make_valid(warp.pres.abs) %>%  # our pres-abs data
-  st_transform(crs=crs(soi.rast))
+  st_transform(crs=crs(bear.sa))
 bc.PAs.reproj <- st_make_valid(bc.PAs) %>% 
-  st_transform(crs=crs(soi.rast))
+  st_transform(crs=crs(bear.sa))
 metro.reproj <- st_make_valid(bc.metro) %>% 
-  st_transform(crs=crs(soi.rast))
-grizz.pop.reproj <- st_make_valid(extent.grizz) %>% 
-  st_transform(crs=crs(soi.rast))
+  st_transform(crs=crs(bear.sa))
+grizz.pop.reproj <- st_make_valid(extant.grizz) %>% 
+  st_transform(crs=crs(bear.sa))
 
 animal.farms.reproj <- st_make_valid(animal.prod.sf) %>% 
-  st_transform(crs=crs(soi.rast))
+  st_transform(crs=crs(bear.sa))
 ground.crop.reproj <- st_make_valid(ground.crop.sf) %>% 
-  st_transform(crs=crs(soi.rast))
+  st_transform(crs=crs(bear.sa))
 soi.bound.reproj <- st_make_valid(soi.10k.boundary) %>% 
-  st_transform(crs=crs(soi.rast))
+  st_transform(crs=crs(bear.sa))
 
 # Check to see if they match:
 st_crs(bears.reproj) == st_crs(bc.PAs.reproj) # [TRUE] = These ARE now the same
@@ -91,11 +105,12 @@ st_crs(metro.reproj) == st_crs(animal.farms.reproj) # [TRUE]
 #Calculation of the distance between the PA's and our points
 
   # Do this for our WARP only data:
-dist.pts2pas.warp <- st_distance(bears.reproj, bc.PAs.reproj)
+#dist.pts2pas.warp <- st_distance(bears.reproj, bc.PAs.reproj)
+dist.pts2pas.warp <- terra::distance(vect(bears.reproj), vect(bc.PAs.reproj))
 head(dist.pts2pas.warp)
 
   # And for our pres-abs data:
-dist.pts2pas.presabs <- st_distance(pres.abs.reproj, bc.PAs.reproj)
+dist.pts2pas.presabs <- terra::distance(vect(pres.abs.reproj), vect(bc.PAs.reproj))
 head(dist.pts2pas.presabs)
 
 
@@ -107,21 +122,11 @@ min.dist.presabs <- apply(dist.pts2pas.presabs, 1, min)
 str(min.dist.presabs)
 
   # Add Distance Variable into Datatable:
-bears.reproj$dist_to_PA<-min.dist.warp   
+# Convert units from meters to km:
+bears.reproj$dist_to_PA<-(min.dist.warp/1000)   
 head(bears.reproj)
 
-pres.abs.reproj$dist_to_PA<-min.dist.presabs
-head(pres.abs.reproj)
-
-  # Remove the units from the values (note: in meters)
-as.numeric(bears.reproj$dist_to_PA)
-as.numeric(pres.abs.reproj$dist_to_PA)
-
-  # Convert units from meters to km:
-bears.reproj$dist_to_PA<-conv_unit(bears.reproj$dist_to_PA,"m","km")
-head(bears.reproj)
-
-pres.abs.reproj$dist_to_PA<-conv_unit(pres.abs.reproj$dist_to_PA,"m","km")
+pres.abs.reproj$dist_to_PA<-(min.dist.presabs/1000)
 head(pres.abs.reproj)
 
 # Now each df has our Dist to PA column added in, and in km units
@@ -130,11 +135,11 @@ head(pres.abs.reproj)
   #Calculation of the distance between the metro areas and our points
 
   # Do this for our WARP only data:
-dist.pts2met.warp <- st_distance(bears.reproj, metro.reproj)
+dist.pts2met.warp <- terra::distance(vect(bears.reproj), vect(metro.reproj))
 head(dist.pts2met.warp)
 
   # And the pres-abs data:
-dist.pts2met.presabs <- st_distance(pres.abs.reproj, metro.reproj)
+dist.pts2met.presabs <- terra::distance(vect(pres.abs.reproj), vect(metro.reproj))
 head(dist.pts2met.presabs)
 
   # Must find the minimum distance to PA's (Distance from conflict point to nearest PA)
@@ -142,22 +147,13 @@ min.dist.met.warp <- apply(dist.pts2met.warp, 1, min)
 min.dist.met.presabs <- apply(dist.pts2met.presabs, 1, min)
 
   # Add Distance Variable into Data table
-bears.reproj$dist_to_Metro<-min.dist.met.warp
+# Convert units from meters to km:
+bears.reproj$dist_to_Metro<-(min.dist.met.warp/1000)
 head(bears.reproj)
 
-pres.abs.reproj$dist_to_Metro<-min.dist.met.presabs
+pres.abs.reproj$dist_to_Metro<-(min.dist.met.presabs/1000)
 head(pres.abs.reproj)
 
-  # Remove the units from the values (note: in meters)
-as.numeric(bears.reproj$dist_to_Metro)  # Make sure col name matches data
-as.numeric(pres.abs.reproj$dist_to_Metro)
-
-  # Convert units from meters to km:
-bears.reproj$dist_to_Metro<-conv_unit(bears.reproj$dist_to_Metro,"m","km")
-head(bears.reproj)
-
-pres.abs.reproj$dist_to_Metro<-conv_unit(pres.abs.reproj$dist_to_Metro,"m","km")
-head(pres.abs.reproj)
 
 # This added the dist to metro areas column to our data
 
@@ -176,11 +172,11 @@ which(is.na(pres.abs.reproj$dist_to_Metro))
 #Calculation of the distance between the grizz pop units and our points
 
   # Do this for our WARP only data:
-dist.pts2grizz.warp <- st_distance(bears.reproj, grizz.pop.reproj)
+dist.pts2grizz.warp <- terra::distance(vect(bears.reproj), vect(grizz.pop.reproj))
 head(dist.pts2grizz.warp)
 
   # And the pres-abs data:
-dist.pts2grizz.presabs <- st_distance(pres.abs.reproj, grizz.pop.reproj)
+dist.pts2grizz.presabs <- terra::distance(vect(pres.abs.reproj), vect(grizz.pop.reproj))
 head(dist.pts2grizz.presabs)
 
   # Must find the minimum distance to PA's (Distance from conflict point to nearest PA)
@@ -188,22 +184,13 @@ min.dist.grizz.warp <- apply(dist.pts2grizz.warp, 1, min)
 min.dist.grizz.presabs <- apply(dist.pts2grizz.presabs, 1, min)
 
   # Add Distance Variable into Data table
-bears.reproj$dist_to_GrizzPop<-min.dist.grizz.warp
+# Convert units from meters to km:
+bears.reproj$dist_to_GrizzPop<-(min.dist.grizz.warp/1000)
 head(bears.reproj)
 
-pres.abs.reproj$dist_to_GrizzPop<-min.dist.grizz.presabs
+pres.abs.reproj$dist_to_GrizzPop<-(min.dist.grizz.presabs/1000)
 head(pres.abs.reproj)
 
-  # Remove the units from the values (note: in meters)
-as.numeric(bears.reproj$dist_to_GrizzPop) 
-as.numeric(pres.abs.reproj$dist_to_GrizzPop)
-
-  # Convert units from meters to km:
-bears.reproj$dist_to_GrizzPop<-conv_unit(bears.reproj$dist_to_GrizzPop,"m","km")
-head(bears.reproj)
-
-pres.abs.reproj$dist_to_GrizzPop<-conv_unit(pres.abs.reproj$dist_to_GrizzPop,"m","km")
-head(pres.abs.reproj)
 
 # This added the dist to grizzly populations column to our data
 
@@ -220,33 +207,35 @@ which(is.na(pres.abs.reproj$dist_to_GrizzPop)) #none
 animal.prod.sv <- vect(animal.farms.reproj)
 ground.crop.sv <- vect(ground.crop.reproj)
 
-
+animal.prod.crop <- crop(animal.prod.sv, bear.sa)
+ground.crop.crop <- crop(ground.crop.sv, bear.sa)
   # Rasterize our subset rasters:
-animal.prod.rast <- terra::rasterize(animal.prod.sv, soi.rast, field = "Frms___")
-ground.crop.rast <- terra::rasterize(ground.crop.sv, soi.rast, field = "Frms___")
+animal.prod.rast <- terra::rasterize(animal.prod.crop, bear.sa, field = "Frms___")
+ground.crop.rast <- terra::rasterize(ground.crop.crop, bear.sa, field = "Frms___")
 
 # Fix the column names:
-names(animal.prod.rast)[names(animal.prod.rast) == "Frms___"] <- "Density of Animal Product & Meat Farming / sq km"
-names(ground.crop.rast)[names(ground.crop.rast) == "Frms___"] <- "Density of Ground Crop & Produce Farming / sq km"
+
+#names(animal.prod.rast)[names(animal.prod.rast) == "Frms___"] <- "Density of Animal Product & Meat Farming / sq km"
+#names(ground.crop.rast)[names(ground.crop.rast) == "Frms___"] <- "Density of Ground Crop & Produce Farming / sq km"
 
   # Save these Farm Rasters:
-terra::writeRaster(animal.prod.rast, "Data/processed/animal_production_density_raster.tif")
-terra::writeRaster(ground.crop.rast, "Data/processed/ground_crop_density_raster.tif" )
+terra::writeRaster(animal.prod.rast, "Data/processed/animal_production_density_raster.tif", overwrite=TRUE)
+terra::writeRaster(ground.crop.rast, "Data/processed/ground_crop_density_raster.tif" , overwrite=TRUE)
 
 # Adjust values:
-animal.prod.rast[animal.prod.rast > 1.5] <- 2
-ground.crop.rast[ground.crop.rast > 1.5] <- 2
+#animal.prod.rast[animal.prod.rast > 1.5] <- 2
+#ground.crop.rast[ground.crop.rast > 1.5] <- 2
 
-animal.prod.adjusted <- animal.prod.rast
-ground.crop.adjusted <- ground.crop.rast
+#animal.prod.adjusted <- animal.prod.rast
+#ground.crop.adjusted <- ground.crop.rast
 
-terra::writeRaster(animal.prod.adjusted, "Data/processed/animal_production_density_adjusted.tif")
-terra::writeRaster(ground.crop.adjusted, "Data/processed/ground_crop_density_adjusted.tif" )
+#terra::writeRaster(animal.prod.adjusted, "Data/processed/animal_production_density_adjusted.tif")
+#terra::writeRaster(ground.crop.adjusted, "Data/processed/ground_crop_density_adjusted.tif" )
 
-farm.density.combined <- terra::merge(animal.prod.adjusted, ground.crop.adjusted)
-farm.density.combined[farm.density.combined > 1] <- 1
+farm.density.combined <- animal.prod.rast + ground.crop.rast
+#farm.density.combined[farm.density.combined > 1] <- 1
 
-terra::writeRaster(farm.density.combined, "Data/processed/combined_farm_density.tif" )
+terra::writeRaster(farm.density.combined, "Data/processed/combined_farm_density.tif" , overwrite=TRUE)
 
 # Buffer WARP Points Before Attributing Farm Values -----------------------
   # Here we buffer the WARP and pres-abs points by 5000m (5km) before extracting the attributes from the farm polygons
@@ -340,50 +329,19 @@ st_write(soi.ccs.crop, "Data/processed/SOI_CCS_10km.shp")
   #  make sure this is a factor, to fit this as a varying intercept
 
   # Assign our points to a CCS category:
-warp.ccs.join <- st_join(bears.reproj, left = TRUE, soi.ccs.crop) # join points
+warp.ccs.join <- st_join(bears.reproj, left = TRUE, bc.ccs.reproj) # join points
 
-pres.abs.ccs.join <- st_join(pres.abs.reproj, left = TRUE, soi.ccs.crop) # join points
+pres.abs.ccs.join <- st_join(pres.abs.reproj, left = TRUE, bc.ccs.reproj) # join points
 
 head(warp.ccs.join) # Assigned points to a CCS category
 head(pres.abs.ccs.join) # nice
 
+warp.ccs.join <- warp.ccs.join %>% 
+  select(., -c(22:26))
   # Delete the columns we don't want:
-warp.ccs.join$PRNAME <- NULL
-warp.ccs.join$PRNTCDVSNC <- NULL
-warp.ccs.join$PRUID <- NULL
-warp.ccs.join$CDUID <- NULL
-warp.ccs.join$CPRVNCCD <- NULL
-warp.ccs.join$FTRCD <- NULL
-warp.ccs.join$CPRVNCCD <- NULL
-warp.ccs.join$PRNTCDVSNC <- NULL
-warp.ccs.join$FFCTVDT <- NULL
-warp.ccs.join$XPRDT <- NULL
-warp.ccs.join$OBJECTID <- NULL
-warp.ccs.join$AREA_SQM <- NULL
-warp.ccs.join$FEAT_LEN <- NULL 
-warp.ccs.join$CDNAME <- NULL
-warp.ccs.join$CDTYPE <- NULL
-warp.ccs.join$CPRVNCNM <- NULL
-warp.ccs.join$CCSNAME.x <- NULL
-warp.ccs.join$CCSUID_ <- NULL
+pres.abs.ccs.join <- pres.abs.ccs.join %>% 
+  select(., -c(23:27))
 
-pres.abs.ccs.join$PRNAME <- NULL
-pres.abs.ccs.join$PRNTCDVSNC <- NULL
-pres.abs.ccs.join$PRUID <- NULL
-pres.abs.ccs.join$CDUID <- NULL
-pres.abs.ccs.join$CPRVNCCD <- NULL
-pres.abs.ccs.join$FTRCD <- NULL
-pres.abs.ccs.join$CPRVNCCD <- NULL
-pres.abs.ccs.join$PRNTCDVSNC <- NULL
-pres.abs.ccs.join$FFCTVDT <- NULL
-pres.abs.ccs.join$XPRDT <- NULL
-pres.abs.ccs.join$OBJECTID <- NULL
-pres.abs.ccs.join$AREA_SQM <- NULL
-pres.abs.ccs.join$FEAT_LEN <- NULL 
-pres.abs.ccs.join$CDNAME <- NULL
-pres.abs.ccs.join$CDTYPE <- NULL
-pres.abs.ccs.join$CPRVNCNM <- NULL
-pres.abs.ccs.join$CCSUID_ <- NULL
 
 head(warp.ccs.join)
 head(pres.abs.ccs.join)
