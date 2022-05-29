@@ -75,11 +75,12 @@ head(warp.all.sp) # Check this to make sure it looks good
 xy<-warp.all.sp[,c(8,7)]
 bears.spdf<-SpatialPointsDataFrame(coords = xy,data = warp.all.sp,
                                    proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+head(bears.spdf)
 str(bears.spdf)
 
   # Ensure this is a sf data frame:
 warp.all.sp <- as(bears.spdf, "sf")
-str(warp.all.sp)
+head(warp.all.sp)
 
 # Filter down to Southern Interior Ecoprovince: ---------------------------
   # Here we select for just the southern interior province
@@ -111,18 +112,17 @@ plot(st_geometry(south.interior.ep), add= TRUE) # Here we see it with a 10k buff
 st_write(south.int.10k.buf, "Data/processed/SOI_10km_buf.shp", append = FALSE)
 
   # Make our SOI template raster:
-#soi.vect <- vect(south.int.10k.buf)
-#grizz.inc.templ <- terra::project(grizz.inc.rast, crs(soi.vect))
-#grizzinc.crop.t <- terra::crop(grizz.inc.templ, soi.vect)  
+soi.vect <- vect(south.int.10k.buf)
+soi.vect.p <- terra::project(soi.vect, crs(grizz.inc.rast))
+grizzinc.crop.t <- terra::crop(grizz.inc.rast, soi.vect.p)  
 
-#soi.rast.templ <- rast(soi.vect, nrows= 218, ncols=298, nlyrs=1, xmin=1149612, xmax=1585533, ymin=453864.2, ymax=772759.3)
-#soi.rast <- terra::rasterize(soi.vect, soi.rast.templ, field = "OBJECTID")
-#soi.rast <- resample( soi.rast, grizzinc.crop.t, method='bilinear')
-#soi.rast[soi.rast == 327] <- 0
+soi.rast <- terra::rasterize(soi.vect.p, grizzinc.crop.t, field = "OBJECTID")
+soi.rast <- resample( soi.rast, grizzinc.crop.t, method='bilinear')
+soi.rast[soi.rast == 327] <- 0
 
 
 # Export as tiff:
-#terra::writeRaster(soi.rast, "Data/processed/SOI_10km.tif")
+terra::writeRaster(soi.rast, "Data/processed/SOI_10km.tif")
 
   # Reports Within a 10k Buffer: 
   # Let's check how many total and just bear reports we include with a 10k buffer:
@@ -138,15 +138,6 @@ warp.crop.10k %>% filter(warp.crop.10k$species_name == "BLACK BEAR" | warp.crop.
 warp.crop.10k <- warp.crop.10k %>% 
   dplyr::select(., -c(15:23))
 
-#warp.crop.10k$CPRVNCCD <- NULL
-#warp.crop.10k$FTRCD <- NULL
-#warp.crop.10k$PRNTCDVSNC <- NULL
-#warp.crop.10k$FFCTVDT <- NULL
-#warp.crop.10k$CPRVNCNM <- NULL
-#warp.crop.10k$XPRDT <- NULL
-#warp.crop.10k$OBJECTID <- NULL
-#warp.crop.10k$AREA_SQM <- NULL
-#warp.crop.10k$FEAT_LEN <- NULL
 
 # Save our Cropped WARP DF ------------------------------------------------
 st_write(warp.crop.10k, "Data/processed/warp_crop_10km_buf.shp", append=FALSE)

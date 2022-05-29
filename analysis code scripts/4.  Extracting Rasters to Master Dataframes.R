@@ -63,8 +63,10 @@ griz.inc.proj <- terra::project(griz.inc.crop, grizz.dens.crop)
 #crs(biophys.cum.curmap) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
 # Nice, this worked --> now in BC Albers EPSG 3005
   # Human Density:
+
 #hm.dens.reproj <- terra::project(hm.dens, crs(soi.rast))
 #crs(hm.dens.soi) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
+
 
   # Project SOI boundary:
 #soi.reproj <- st_make_valid(soi.10k.boundary) %>% 
@@ -83,11 +85,13 @@ griz.inc.proj <- terra::project(griz.inc.crop, grizz.dens.crop)
 #crs(soi.rast) # The same as above, just formatted differently - success!
 
   # Check Raster Resolutions:
+
 #res(grizz.dens) # 1000 x 1000
 #res(biophys.cum.curmap) # 1000 x 1000
 #res(grizz.inc.rast) # 270 x 270
 #res(soi.rast) # 271 x 271
 #res(hm.dens.soi) # 271 x 271
+
 
 # Buffer the WARP Points (Before Overlay) --------------------------------------------------
 # Here we buffer the WARP and ppres-abs points by 5km before extracting the attributes from the current maps
@@ -103,7 +107,9 @@ plot(st_geometry(pres.abs.buf)) # Check the buffers
 # Let's Turn the Buffered Points into a SpatVector:
 warp.sv.buf <- vect(warp.all.buf)
 pres.abs.sv.buf <- vect(pres.abs.buf)
+
 #soi.sv <- vect(soi.bound.reproj)
+
 
 # Plot them together to see if projection truly is same:
 plot(grizz.inc.reproj)
@@ -124,15 +130,18 @@ plot(pres.abs.sv.buf, add = TRUE)
 #biophys.crop <- terra::crop(biophys.reproj, soi.rast)
 #bhs.crop <- terra::crop(grizz.dens.reproj, soi.rast)
 
+
 #plot(grizzinc.crop)
 #plot(biophys.crop)
 #plot(bhs.crop)
 
 # Resample to match extents and res ( we want to match to the grizzinc res):
+
 #biophys.rsmple <- resample(biophys.crop, soi.rast, method='bilinear')
 #bhs.rsmple <- resample(bhs.crop, soi.rast, method='bilinear')
 #hm.dens.rsmple <- resample(hm.dens.reproj, soi.rast, method='bilinear')
 #grizzinc.rsmple <- resample(grizzinc.crop, soi.rast, method='bilinear')
+
 
 #plot(biophys.rsmple)
 #plot(bhs.rsmple)
@@ -177,6 +186,8 @@ which(is.na(pres.abs.master$Human_Dens))
 #plot(st_geometry(pres.abs.reproj[5921,]), add= TRUE) # these are outside data window
 
 #pres.abs.reproj <- pres.abs.reproj %>% drop_na(Human_Dens)  
+
+which(is.na(pres.abs.reproj$Human_Dens)) # fixed
 
 # Save this as new file ---------------------------------------------------
 
