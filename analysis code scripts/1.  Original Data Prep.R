@@ -16,6 +16,8 @@ library(units)
 library(googledrive)
 
 
+### NEED TO UPDATE THESE -- REORGANIZE ORIGINAL INTO FOLDERS, ADD IN EACH FOLDER AS A GOOGLE DRIVE DOWNLOAD
+
 # Load our Data with GoogleDrive: -----------------------------------------
 options(
   gargle_oauth_cache = ".secrets",
