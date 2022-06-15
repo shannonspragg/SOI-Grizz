@@ -26,7 +26,7 @@ biophys.cum.curmap <- rast("Data/original/cum_currmap.tif") # use this one
   # Normalized shows the degree to which a pixel has more or less current than expected under resistance-free conditions (cumulative current flow divided by flow potential)
 
   # Just survey response layer (not CS):
-grizz.inc.rast <- rast("Data/original/grizz_inc_updated.tif") #  the proportion of people within a census that 
+grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
 
   # responded “I would like to see grizzlies increase or increase substantially” in response to “how would you like to see grizzly 
   # populations respond in the next several years?” 
@@ -46,10 +46,13 @@ hm.dens <- terra::rast("Data/processed/human_dens_crop.tif") # SOI Region 10km
 # Check / Set CRS for Raster and Points -----------------------------------
   # Match the projection and CRS of the current map to the resistance maps:
 #only hm.dens and griz increas rast are in the wrong projection
-grizz.dens.crop <- terra::crop(grizz.dens, vect(soi.10k.boundary), mask=TRUE)
-biophys.curmap.crop <- terra::crop(biophys.cum.curmap, vect(soi.10k.boundary), mask=TRUE)
+grizz.dens.crop <- terra::crop(grizz.dens, vect(soi.10k.boundary))
+grizz.dens.crop <- mask(grizz.dens, vect(soi.10k.boundary))
+biophys.curmap.crop <- terra::crop(biophys.cum.curmap, vect(soi.10k.boundary))
+biophys.curmap.crop <- terra::mask(biophys.curmap.crop, vect(soi.10k.boundary))
 hm.dens.proj <- terra::project(hm.dens, grizz.dens.crop)
-griz.inc.crop <- terra::crop(grizz.inc.rast, terra::project(vect(soi.10k.boundary), grizz.inc.rast), mask=TRUE)
+griz.inc.crop <- terra::crop(grizz.inc.rast, terra::project(vect(soi.10k.boundary), grizz.inc.rast))
+griz.inc.crop <- terra::mask(griz.inc.crop, vect(soi.10k.boundary))
 griz.inc.proj <- terra::project(griz.inc.crop, grizz.dens.crop)
 
 # GrizzInc Map:
@@ -112,16 +115,16 @@ pres.abs.sv.buf <- vect(pres.abs.buf)
 
 
 # Plot them together to see if projection truly is same:
-plot(grizz.inc.reproj)
+plot(griz.inc.proj)
 plot(warp.sv.buf, add = TRUE) 
 
-plot(grizz.dens.reproj)
+plot(grizz.dens.crop)
 plot(warp.sv.buf, add = TRUE) 
 
-plot(biophys.reproj)
+plot(biophys.curmap.crop)
 plot(warp.sv.buf, add = TRUE) 
 
-plot(hm.dens.reproj)
+plot(hm.dens.proj)
 plot(pres.abs.sv.buf, add = TRUE) 
 
 
@@ -155,7 +158,7 @@ warp.grizz.inc.b.ext <- terra::extract(griz.inc.proj, warp.sv.buf, mean, na.rm =
 warp.bhs.b.extract <- terra::extract(grizz.dens.crop, warp.sv.buf, mean, na.rm = TRUE) 
 warp.dens.b.ext <- terra::extract(hm.dens.proj, warp.sv.buf, mean, na.rm = TRUE) 
 
-pres.abs.biophys.b.ext <- terra::extract(biohphys.curmap.crop, pres.abs.sv.buf, mean, na.rm = TRUE)  # This gives us the mean value of each buffered area --> what we want!
+pres.abs.biophys.b.ext <- terra::extract(biophys.curmap.crop, pres.abs.sv.buf, mean, na.rm = TRUE)  # This gives us the mean value of each buffered area --> what we want!
 pres.abs.grizz.inc.b.ext <- terra::extract(griz.inc.proj, pres.abs.sv.buf, mean, na.rm = TRUE) 
 pres.abs.bhs.b.extract <- terra::extract(grizz.dens.crop, pres.abs.sv.buf, mean, na.rm = TRUE) 
 pres.abs.dens.b.ext <- terra::extract(hm.dens.proj, pres.abs.sv.buf, mean, na.rm = TRUE) 
@@ -181,13 +184,7 @@ which(is.na(pres.abs.master$Biophys)) #none
 which(is.na(pres.abs.master$BHS)) #none
 which(is.na(pres.abs.master$GrizzInc)) # none
 which(is.na(pres.abs.master$Human_Dens)) 
-
-#plot(hm.dens.rsmple)
-#plot(st_geometry(pres.abs.reproj[5921,]), add= TRUE) # these are outside data window
-
-#pres.abs.reproj <- pres.abs.reproj %>% drop_na(Human_Dens)  
-
-which(is.na(pres.abs.reproj$Human_Dens)) # fixed
+which(is.na(pres.abs.reproj$Human_Dens)) # none
 
 # Save this as new file ---------------------------------------------------
 
@@ -198,5 +195,5 @@ st_write(pres.abs.master, "Data/processed/pres_abs_final.shp")
 
 terra::writeRaster(griz.inc.proj, "Data/processed/grizz_inc_SOI_10km.tif", overwrite=TRUE)
 terra::writeRaster(biophys.curmap.crop, "Data/processed/biophys_SOI_10km.tif", overwrite=TRUE)
-terra::writeRaster(grizz.dens.crop, "Data/processed/bhs_SOI_10km.tif")
-terra::writeRaster(hm.dens.proj, "Data/processed/human_dens_SOI_10km.tif" )
+terra::writeRaster(grizz.dens.crop, "Data/processed/bhs_SOI_10km.tif", overwrite=TRUE)
+terra::writeRaster(hm.dens.proj, "Data/processed/human_dens_SOI_10km.tif" , overwrite=TRUE)
