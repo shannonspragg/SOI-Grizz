@@ -13,30 +13,6 @@ library(rgdal)
 library(terra)
 #library(stars)
 library(units)
-library(googledrive)
-
-
-### NEED TO UPDATE THESE -- REORGANIZE ORIGINAL INTO FOLDERS, ADD IN EACH FOLDER AS A GOOGLE DRIVE DOWNLOAD
-
-# Load our Data with GoogleDrive: -----------------------------------------
-options(
-  gargle_oauth_cache = ".secrets",
-  gargle_oauth_email = TRUE
-)
-
-folder_url <- "https://drive.google.com/drive/u/0/folders/1EOzq2fjN9FI0Pj8YR9eiVE_TnH0LaRCF" # all original data
-folder <- drive_get(as_id(folder_url))
-gdrive_files <- drive_ls(folder)
-#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
-lapply(gdrive_files$id, function(x) drive_download(as_id(x),
-                                                   path = paste0(here::here("Data/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
-
-folder_url <- "https://drive.google.com/drive/folders/1pvMatdKYeUdGAxME5y3zO-jfit1T8aC3" # Canada PAs gdb
-folder <- drive_get(as_id(folder_url))
-gdrive_files <- drive_ls(folder)
-#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
-lapply(gdrive_files$id, function(x) drive_download(as_id(x),
-                                                   path = paste0(here::here("Data/original/CPCAD-BDCAPC_Dec2020.gdb/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 # Bring in our Original Data --------------------------------------------
 
