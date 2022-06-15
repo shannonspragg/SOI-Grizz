@@ -254,6 +254,8 @@ Comparing the simple pseudo-absence model with the full model in a ROC plot show
 plot(loo.pa.full, label_points = TRUE)
 loo.pa.full # get the summary of our test
 
+setwd("/Users/shannonspragg/SOI-Grizz")
+saveRDS(loo.pa.full, file= "Data/processed/loo_pa_full.rds")
 ############## Comparison to Baseline Model: -------------------------------------------
 
 # Compute our baseline result without covariates:
@@ -296,6 +298,7 @@ kfold.10.ps.int <- readRDS(file = "Data/processed/post_pa_kfold10_int.rds")
 ## Create our Varying Intercept Raster
 ```{r varying intercept raster, echo=FALSE}
 # Bring in Data: ----------------------------------------------------------
+setwd("/Users/shannonspragg/SOI-Grizz")
 soi.ccs.crop <- st_read( "Data/processed/SOI_CCS_10km.shp")
   # Bring in one of our rasters for rasterizing polygon data later:
 soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km
