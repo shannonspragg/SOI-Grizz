@@ -87,7 +87,7 @@ metro.soi.sv <- terra::crop(metro.sv, soi.15km.sv)
 # Create a Continuous Raster for Cell Distance to PA's: -------------------
 
   # Do this for our variables:
-dist.pa.raster <- terra::distance(bhs.rast, PAs.soi) 
+dist.pa.raster <- terra::distance(bhs.rast, PAs.soi.sv) 
 
 dist.met.raster <- terra::distance(bhs.rast, metro.soi.sv) 
 
