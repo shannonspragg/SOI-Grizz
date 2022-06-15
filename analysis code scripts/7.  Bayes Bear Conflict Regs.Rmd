@@ -131,6 +131,7 @@ dist.2.grizzpop.co <- scale2sd(warp.df$dst__GP)
 grizzinc.co <- scale2sd(warp.df$GrizzInc)
 bhs.co <- scale2sd(warp.df$BHS)
 biophys.co <- scale2sd(warp.df$Biophys)
+hum.dens <- scale2sd(warp.df$Human_Dens)
 
 bears_presence_co <- warp.df$bears # Binomial bears
 prob.gen.conf <- warp.df$ProbGeneralConf  # This was already scaled
@@ -148,7 +149,7 @@ We we center our predictors by subtracting the means and scale by dividing by tw
 # Fit Data for Rstanarm: --------------------------------------------------
 
 # Do this for our conflict only df:
-mini.warp.df.co <- data.frame(bears_presence_co, dist.2.pa.co, dist.2.grizzpop.co, animal.farm.dens.co, ground.crop.dens.co, grizzinc.co, bhs.co, biophys.co, CCSNAME.co, prob.gen.conf )
+mini.warp.df.co <- data.frame(bears_presence_co, dist.2.pa.co, dist.2.grizzpop.co, animal.farm.dens.co, ground.crop.dens.co, grizzinc.co, bhs.co, biophys.co, CCSNAME.co, prob.gen.conf, hum.dens )
 str(mini.warp.df.co)
 ```
 Here we produce a mini data frame that excludes the spatial geometry, but includes all of our critical predictors.
@@ -167,7 +168,7 @@ post.co.int <- stan_glmer(bears_presence_co ~ 1 + (1 | CCSNAME.co),
                            seed = SEED, refresh=0) # we add seed for reproducibility
 
 # Our full model + offset for p(general conflict):
-post.co.no.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + prob.gen.conf + I(prob.gen.conf), 
+post.co.no.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + hum.dens + prob.gen.conf + I(prob.gen.conf^2), 
                              data = mini.warp.df.co,
                              family = binomial(link = "logit"), # define our binomial glm
                              prior = t_prior, prior_intercept = int_prior, QR=TRUE,
@@ -176,7 +177,7 @@ post.co.no.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzp
 
 
 # Our full model + offset for p(general conflict):
-post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + offset(prob.gen.conf), 
+post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + hum.dens + offset(prob.gen.conf), 
                              data = mini.warp.df.co,
                              family = binomial(link = "logit"), # define our binomial glm
                              prior = t_prior, prior_intercept = int_prior, QR=TRUE,
@@ -184,7 +185,7 @@ post.co.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.
                              seed = SEED, refresh=0) # we add seed for reproducibility
 
 # Partial model (removing correlated ag variable):
-post.co.partial.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co  + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + offset(prob.gen.conf), 
+post.co.partial.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co  + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + hum.dens + offset(prob.gen.conf), 
                              data = mini.warp.df.co,
                              family = binomial(link = "logit"), # define our binomial glm
                              prior = t_prior, prior_intercept = int_prior, QR=TRUE,
