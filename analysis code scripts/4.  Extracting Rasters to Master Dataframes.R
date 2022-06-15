@@ -189,7 +189,7 @@ which(is.na(pres.abs.reproj$Human_Dens)) # none
 # Save this as new file ---------------------------------------------------
 
 st_write(warp.all.sp, "Data/processed/warp_final.shp", append = FALSE)
-st_write(pres.abs.master, "Data/processed/pres_abs_final.shp")
+st_write(pres.abs.master, "Data/processed/pres_abs_final.shp", append=FALSE)
 
 # Save projected cropped rasters ------------------------------------------
 

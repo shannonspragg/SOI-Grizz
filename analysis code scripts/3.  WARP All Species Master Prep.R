@@ -64,7 +64,7 @@ extant.grizz <- st_read("Data/processed/Extant Grizzly Pop Units.shp")
 
   # SOI Raster for rasterizing later:
 bear.hab <- rast("Data/original/grizz_dens.tif")
-sa.vect.proj <- project(vect(soi.10k.boundary), bear.hab)
+sa.vect.proj <- terra::project(vect(soi.10k.boundary), bear.hab)
 bear.sa <- crop(bear.hab, sa.vect.proj)
 bear.sa <- mask(bear.sa, sa.vect.proj)
 
@@ -279,20 +279,20 @@ which(is.na(bears.reproj$Ground_Crops))
 which(is.na(pres.abs.reproj$Animal_Farming)) # We have about 150 NA's
 which(is.na(pres.abs.reproj$Ground_Crops)) # Same NA's as above
 
-  # Plot some of our NA's to see if they're outside the boundary:
-plot(animal.prod.rast)
-plot(st_geometry(pres.abs.reproj[16605,]), col = "red", add=TRUE)
-plot(st_geometry(pres.abs.reproj[9601,]), col = "red", add=TRUE)
-plot(st_geometry(pres.abs.reproj[13096,]), col = "red", add=TRUE) # All of these are outside our southern border
-
-  # Drop these NA records:
-pres.abs.dropped <- pres.abs.reproj %>% drop_na(Animal_Farming) %>% drop_na(Ground_Crops)
-
-which(is.na(pres.abs.dropped$Animal_Farming)) # Now they're gone
-which(is.na(pres.abs.dropped$Ground_Crops)) # Same
-
-  # Update data frame:
-pres.abs.reproj <- pres.abs.dropped
+#   # Plot some of our NA's to see if they're outside the boundary:
+# plot(animal.prod.rast)
+# plot(st_geometry(pres.abs.reproj[16605,]), col = "red", add=TRUE)
+# plot(st_geometry(pres.abs.reproj[9601,]), col = "red", add=TRUE)
+# plot(st_geometry(pres.abs.reproj[13096,]), col = "red", add=TRUE) # All of these are outside our southern border
+# 
+#   # Drop these NA records:
+# pres.abs.dropped <- pres.abs.reproj %>% drop_na(Animal_Farming) %>% drop_na(Ground_Crops)
+# 
+# which(is.na(pres.abs.dropped$Animal_Farming)) # Now they're gone
+# which(is.na(pres.abs.dropped$Ground_Crops)) # Same
+# 
+#   # Update data frame:
+# pres.abs.reproj <- pres.abs.dropped
 
 
 ############################ Next, Add in the CCS Region Names to the Data:
@@ -347,23 +347,23 @@ head(pres.abs.ccs.join)
 which(is.na(warp.ccs.join$CCSNAME)) # no NAs
 which(is.na(warp.ccs.join$CCSUID)) # same
 
-which(is.na(pres.abs.ccs.join$CCSNAME)) # some 
-which(is.na(pres.abs.ccs.join$CCSUID)) # same as above
-
-  # Plot to see if these are outside the soi boundary too:
-plot(st_geometry(soi.ccs.crop))
-plot(st_geometry(pres.abs.ccs.join[11043,]), col = "red", add=TRUE)
-plot(st_geometry(pres.abs.reproj[13423,]), col = "red", add=TRUE)
-plot(st_geometry(pres.abs.reproj[16327,]), col = "red", add=TRUE) # All of these are just outside our southern border
-
-  # Drop these NA records:
-pres.abs.dropped <- pres.abs.ccs.join %>% drop_na(CCSNAME) %>% drop_na(CCSUID) 
-
-which(is.na(pres.abs.dropped$CCSNAME)) # Now they're gone
-which(is.na(pres.abs.dropped$CCSUID)) # Same
-
-# Update data frame:
-pres.abs.ccs.join <- pres.abs.dropped
+# which(is.na(pres.abs.ccs.join$CCSNAME)) # some 
+# which(is.na(pres.abs.ccs.join$CCSUID)) # same as above
+# 
+#   # Plot to see if these are outside the soi boundary too:
+# plot(st_geometry(soi.ccs.crop))
+# plot(st_geometry(pres.abs.ccs.join[11043,]), col = "red", add=TRUE)
+# plot(st_geometry(pres.abs.reproj[13423,]), col = "red", add=TRUE)
+# plot(st_geometry(pres.abs.reproj[16327,]), col = "red", add=TRUE) # All of these are just outside our southern border
+# 
+#   # Drop these NA records:
+# pres.abs.dropped <- pres.abs.ccs.join %>% drop_na(CCSNAME) %>% drop_na(CCSUID) 
+# 
+# which(is.na(pres.abs.dropped$CCSNAME)) # Now they're gone
+# which(is.na(pres.abs.dropped$CCSUID)) # Same
+# 
+# # Update data frame:
+# pres.abs.ccs.join <- pres.abs.dropped
 
 
 # WARP All Species Master Data Frame --------------------------------------
