@@ -50,8 +50,10 @@ library(corrplot)
 ## Bring in Data and Prep Predictors:
 ```{r import data, echo=FALSE}
 # Import Data: ------------------------------------------------------------
+setwd("/Users/shannonspragg/SOI-Grizz")
+
 # Our just-conflict point data:
-warp.df <- st_read("Data/processed/warp.final.shp")
+warp.df <- st_read("Data/processed/warp_final.shp")
 str(warp.df)
 
 # Bring in our P(General Conflict) Raster for Extraction:
@@ -62,6 +64,7 @@ names(prob.gen.conf.rast)[names(prob.gen.conf.rast) == "lyr.1"] <- "Probability 
 ```{r predictor rasters, echo=FALSE, include=FALSE}
 # Import our Predictor Rasters: -------------------------------------------
   # Here we bring in all of our predictor rasters for the SOI region:
+setwd("/Users/shannonspragg/SOI-Grizz")
 
   # Distance to Nearest Protected Area (km):
 dist2pa.rast <- terra::rast("Data/processed/dist2pa_SOI_10km.tif" )
@@ -122,8 +125,8 @@ warp.df <- st_read("Data/processed/warp_df_complete.shp")
 scale2sd <-function(variable){(variable - mean(variable, na.rm=TRUE))/(2*sd(variable, na.rm=TRUE))}
 
 dist.2.pa.co <- scale2sd(warp.df$dst__PA)
-animal.farm.dens.co <- warp.df$Anml_Fr
-ground.crop.dens.co <- warp.df$Grnd_Cr
+animal.farm.dens.co <- scale2sd(warp.df$Anml_Fr)
+ground.crop.dens.co <- scale2sd(warp.df$Grnd_Cr)
 dist.2.grizzpop.co <- scale2sd(warp.df$dst__GP)
 grizzinc.co <- scale2sd(warp.df$GrizzInc)
 bhs.co <- scale2sd(warp.df$BHS)
@@ -164,7 +167,7 @@ post.co.int <- stan_glmer(bears_presence_co ~ 1 + (1 | CCSNAME.co),
                            seed = SEED, refresh=0) # we add seed for reproducibility
 
 # Our full model + offset for p(general conflict):
-post.co.no.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + prob.gen.conf, 
+post.co.no.offset <- stan_glmer(bears_presence_co ~ dist.2.pa.co + dist.2.grizzpop.co + animal.farm.dens.co + ground.crop.dens.co + grizzinc.co + biophys.co + bhs.co + (1 | CCSNAME.co) + prob.gen.conf + I(prob.gen.conf), 
                              data = mini.warp.df.co,
                              family = binomial(link = "logit"), # define our binomial glm
                              prior = t_prior, prior_intercept = int_prior, QR=TRUE,

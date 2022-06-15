@@ -6,6 +6,7 @@ author: "Shannon Spragg"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'Users/shannonspragg/SOI-Grizz')
 ```
 
 ## Formatting our Pseudo-absence Bayesian Probability of Conflict Regressions:
@@ -54,7 +55,8 @@ library(corrplot)
 ```{r data, echo=FALSE}
 # Import Data: ------------------------------------------------------------
 # Here we have our presence-absence data:
-warp.pres.abs <- st_read("Data/processed/pres.abs.final.shp")
+setwd("/Users/shannonspragg/SOI-Grizz")
+warp.pres.abs <- st_read("Data/processed/pres_abs_final.shp")
 head(warp.pres.abs)
 ```
 
@@ -62,6 +64,7 @@ head(warp.pres.abs)
 ```{r bring in data 2, echo=FALSE, include=FALSE}
 # Here we bring in all of our predictor rasters for the SOI region:
   # link to data here:   https://drive.google.com/drive/u/0/folders/1T60Al9vHOF-E7ftKzvzN2CMUyF1agC-l
+setwd("/Users/shannonspragg/SOI-Grizz")
 
   # Distance to Neartest Protected Area (km):
 dist2pa.rast <- terra::rast("Data/processed/dist2pa_SOI_10km.tif" )
