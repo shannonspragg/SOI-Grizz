@@ -100,7 +100,7 @@ soi.rast[soi.rast == 327] <- 0
 
 
 # Export as tiff:
-terra::writeRaster(soi.rast, "Data/processed/SOI_10km.tif")
+terra::writeRaster(soi.rast, "Data/processed/SOI_10km.tif", overwrite=TRUE)
 
   # Reports Within a 10k Buffer: 
   # Let's check how many total and just bear reports we include with a 10k buffer:
@@ -277,7 +277,7 @@ extant.grizz <- filter(grizz.units, POP_NAME == "South Chilcotin Ranges" |
                          POP_NAME == "South Selkirk")
 
   # Plot with our boundary to see overlap/position
-plot(st_geometry(extent.grizz))
+plot(st_geometry(extant.grizz))
 plot(st_geometry(south.int.10k.buf), add=TRUE)
 
   # Save this for later:
