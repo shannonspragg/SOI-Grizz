@@ -129,7 +129,7 @@ post.int.only <- stan_glmer(conflict_presence_ps ~ 1 + (1 | CCSNAME.ps),
                   seed = SEED, refresh=0) # we add seed for reproducability
 
 # Global Model: including all of our predictors 
-post.pa.full <- stan_glmer(conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps + animal.farm.dens.ps + ground.crop.dens.ps + pop.dens + (1 | CCSNAME.ps), 
+post.pa.full <- stan_glmer(conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps + animal.farm.dens.ps + ground.crop.dens.ps + pop.dens + I(pop.dens^2) + (1 | CCSNAME.ps), 
                             data = mini.warp.df.ps,
                             family = binomial(link = "logit"), # define our binomial glm
                             prior = t_prior, prior_intercept = int_prior, QR=TRUE,
@@ -139,6 +139,7 @@ post.pa.full <- stan_glmer(conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps +
 summary(post.int.onlny)
 summary(post.pa.full)
 
+setwd("/Users/shannonspragg/SOI-Grizz")
   # Save an object to a file
 saveRDS(post.pa.full, file = "Data/processed/post_pa_full.rds")
 saveRDS(post.int.only, file = "Data/processed/post_pa_int.rds")
