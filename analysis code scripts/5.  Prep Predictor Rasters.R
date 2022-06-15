@@ -22,21 +22,22 @@ soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
 #soi.rast <- rast("Data/processed/SOI_10km.tif")
   
   # PA and Metro Data: (need to be cropped)
-fgdb <- "Data/original/CPCAD-BDCAPC_Dec2020.gdb"
-fc <- readOGR(dsn=fgdb,layer="CPCAD_Dec2020")
-fc.sf <- as(fc, "sf")
-bc.PAs <- fc.sf %>% 
-  filter(., LOC_E == "British Columbia") 
+# fgdb <- "Data/original/CPCAD-BDCAPC_Dec2020.gdb"
+# fc <- readOGR(dsn=fgdb,layer="CPCAD_Dec2020")
+# fc.sf <- as(fc, "sf")
+# bc.PAs <- fc.sf %>% 
+#   filter(., LOC_E == "British Columbia") 
+# 
+# # Filter by IUCN status (Muise et al., 2022 https://esajournals.onlinelibrary.wiley.com/doi/10.1002/eap.2603)
+# bc.PAs.iucn.filtered <- bc.PAs %>% 
+#   filter(., IUCN_CAT == "Ia" | IUCN_CAT == "Ib" | IUCN_CAT == "II" | IUCN_CAT == "IV") %>% 
+#   st_make_valid()
+# bc.PAs.iucn.filtered$areaha <- st_area(bc.PAs.iucn.filtered) 
+# units(bc.PAs.iucn.filtered$areaha) <- units::make_units(ha)
+# bc.PAs.iucn.filtered$areaha <- as.numeric(bc.PAs.iucn.filtered$areaha) 
+# # Filter by PA's larger than 100 ha:
 
-# Filter by IUCN status (Muise et al., 2022 https://esajournals.onlinelibrary.wiley.com/doi/10.1002/eap.2603)
-bc.PAs.iucn.filtered <- bc.PAs %>% 
-  filter(., IUCN_CAT == "Ia" | IUCN_CAT == "Ib" | IUCN_CAT == "II" | IUCN_CAT == "IV") %>% 
-  st_make_valid()
-bc.PAs.iucn.filtered$areaha <- st_area(bc.PAs.iucn.filtered) 
-units(bc.PAs.iucn.filtered$areaha) <- units::make_units(ha)
-bc.PAs.iucn.filtered$areaha <- as.numeric(bc.PAs.iucn.filtered$areaha) 
-# Filter by PA's larger than 100 ha:
-bc.PAs <- filter(bc.PAs.iucn.filtered, areaha > 100)
+bc.PAs <- st_read("Data/processed/bc_PAs.shp")
 bc.metro<-st_read("Data/original/CNCNSSMTRR_polygon.shp")
   
   # Extant Grizzly Populations:

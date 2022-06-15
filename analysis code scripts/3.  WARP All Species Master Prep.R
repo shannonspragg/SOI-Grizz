@@ -44,6 +44,8 @@ bc.PAs.iucn.filtered$areaha <- as.numeric(bc.PAs.iucn.filtered$areaha)
 # Filter by PA's larger than 100 ha:
 bc.PAs <- filter(bc.PAs.iucn.filtered, areaha > 100) 
 
+st_write(bc.PAs, "Data/processed/bc_PAs.shp")
+
   # BC Metropolitan Areas:
 bc.metro<-st_read("Data/original/CNCNSSMTRR_polygon.shp")
 str(bc.metro) # check this
