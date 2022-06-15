@@ -60,7 +60,7 @@ bc.PAs.reproj <- st_make_valid(bc.PAs) %>%
 metro.reproj <- st_make_valid(bc.metro) %>% 
   st_transform(crs=st_crs(soi.10k.boundary))
 grizz.pop.reproj <- st_make_valid(extant.grizz) %>% 
-  st_transform(crs=crs(soi.10k.boundary))
+  st_transform(crs=st_crs(soi.10k.boundary))
 
   # Check to see if they match:
 st_crs(soi.10k.boundary) == st_crs(bc.PAs.reproj) # [TRUE] 
@@ -71,9 +71,18 @@ st_crs(grizz.pop.reproj) == st_crs(soi.10k.boundary) # [TRUE]
 # Rasterize our Points & Polygons: ----------------------------------------
 
   # Make our data spatvectors:
-PAs.soi <- vect(bc.PAs.reproj) 
-metro.soi.sv <- vect(metro.reproj)
+PAs.sv <- vect(bc.PAs.reproj) 
+metro.sv <- vect(metro.reproj)
 grizz.pop.sv <- vect(grizz.pop.reproj)
+
+# Crop PAs & Metro --------------------------------------------------------
+soi.15k.buf <- soi.10k.boundary %>% 
+  st_buffer(., 5000)
+
+soi.15km.sv <- vect(soi.15k.buf)
+
+PAs.soi.sv <- terra::crop(PAs.sv, soi.15km.sv)
+metro.soi.sv <- terra::crop(metro.sv, soi.15km.sv)
 
 # Create a Continuous Raster for Cell Distance to PA's: -------------------
 
