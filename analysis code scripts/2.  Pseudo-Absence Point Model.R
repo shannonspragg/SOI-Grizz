@@ -16,7 +16,9 @@ warp.all <-st_read("Data/processed/warp_crop_10km_buf.shp")
 
 grizz.dens <- rast("Data/original/grizz_dens.tif")
 soi.vect <- project(vect(soi.10k.buf), crs(grizz.dens))
-grizz.crop <- crop(grizz.dens, soi.vect, mask=TRUE)
+grizz.crop <- terra::crop(grizz.dens, soi.vect)
+grizz.crop <- terra::mask(grizz.crop, soi.vect)
+
 # Make sure our presence points are all species reports: ------------------
   # Convert all of our species to 1's (not just bears):
 #Let's not do this because it's confusing later
@@ -26,7 +28,7 @@ warp.all$anyConflict <- 1  # so this gives 1's for all species reports now
 
 # Generate Random Points for Pseudo-absences: -----------------------------
 set.seed(2345)
-p.abs.pts <- randomPoints(raster(grizz.crop), 11000)
+p.abs.pts <- randomPoints(raster(grizz.crop), 9000)
 
 #plot(grizz.dens)
 #plot(p.abs.pts, add=TRUE) # This gives us our absence points!

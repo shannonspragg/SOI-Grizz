@@ -61,10 +61,11 @@ str(bc.ccs)
 extant.grizz <- st_read("Data/processed/Extant Grizzly Pop Units.shp")
 
   # SOI Raster for rasterizing later:
-#soi.rast <- terra::rast("Data/processed/SOI_10km.tif") # SOI Region 10km buffer raster
 bear.hab <- rast("Data/original/grizz_dens.tif")
 sa.vect.proj <- project(vect(soi.10k.boundary), bear.hab)
-bear.sa <- crop(bear.hab, sa.vect.proj, mask=TRUE)
+bear.sa <- crop(bear.hab, sa.vect.proj)
+bear.sa <- mask(bear.sa, sa.vect.proj)
+
 # Reproject All Data ------------------------------------------------------
   # Now we project data to match the template raster:
 
@@ -94,13 +95,6 @@ st_crs(metro.reproj) == st_crs(animal.farms.reproj) # [TRUE]
 ############################ Adding the Distance Variables to the Data:
 
 # Prep Variable 1: Dist to PA's -------------------------------------------
-  # Start by Filtering our PA's:
-  ## NOTE: if using Clayton's data, skip filter part
-
-  # Filter to those larger than 1,000 sq ha for general species (pres-abs):
-#bc.PAs.1k.ha <- filter(bc.PAs.reproj, O_AREA > 1000) # Our 1k for general species
-  # Filter to those larger than 10,000 sq ha for bears (warp):
-#bc.PAs.10k.ha <- filter(bc.PAs.reproj, O_AREA > 10000) # Our 10k for bears only
 
 #Calculation of the distance between the PA's and our points
 
@@ -322,7 +316,7 @@ plot(st_geometry(soi.ccs.crop))
 plot(st_geometry(bears.reproj), add=TRUE)
 
   # Write this as a .shp for later:
-st_write(soi.ccs.crop, "Data/processed/SOI_CCS_10km.shp")
+st_write(soi.ccs.crop, "Data/processed/SOI_CCS_10km.shp", append=FALSE)
 
 # Assign the WARP Points to a CCS Region: ---------------------------------
   ## Here we want to overlay the points with the regions, adding a column in the warp data that is CCS region ID, 
@@ -337,10 +331,10 @@ head(warp.ccs.join) # Assigned points to a CCS category
 head(pres.abs.ccs.join) # nice
 
 warp.ccs.join <- warp.ccs.join %>% 
-  select(., -c(22:26))
+  dplyr::select(., -c(22:26))
   # Delete the columns we don't want:
 pres.abs.ccs.join <- pres.abs.ccs.join %>% 
-  select(., -c(23:27))
+  dplyr::select(., -c(23:27))
 
 
 head(warp.ccs.join)
@@ -372,6 +366,6 @@ pres.abs.ccs.join <- pres.abs.dropped
 
 # WARP All Species Master Data Frame --------------------------------------
   # Save the resulting data frames here:
-st_write(warp.ccs.join, "Data/processed/warp.master.shp")
-st_write(pres.abs.ccs.join, "Data/processed/pres.abs.master.shp")
+st_write(warp.ccs.join, "Data/processed/warp.master.shp", append = FALSE)
+st_write(pres.abs.ccs.join, "Data/processed/pres.abs.master.shp", append=FALSE)
 
