@@ -1,13 +1,10 @@
 
 # Download Data -----------------------------------------------------------
-### Here we dowload all of our "original" data
+### Here we download all of our "original" data
 
 # Load Packages -------------------------------------------------------
-
 library(googledrive)
 
-
-### NEED TO UPDATE THESE -- REORGANIZE ORIGINAL INTO FOLDERS, ADD IN EACH FOLDER AS A GOOGLE DRIVE DOWNLOAD
 
 # Load our Data with GoogleDrive: -----------------------------------------
 options(
