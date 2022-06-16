@@ -1,3 +1,9 @@
+
+# Bear Conflict Regression Models: ----------------------------------------
+  ## Here we prep the bear conflict models, plots, posterior draws, and probability of conflict raster
+
+
+# Load packages: ----------------------------------------------------------
 library(rstanarm)
 library(tidyverse)
 library(sf)
@@ -12,10 +18,13 @@ library(terra)
 library(modelr)
 theme_set(bayesplot::theme_default(base_family = "sans"))
 
+
+# Bring in Data & Prep: ----------------------------------------------------------
 bear.conflict <- st_read("Data/processed/warp_final.shp") %>% 
   st_buffer(., 5000)
 
-prob.conflict <- rast("Data/processed/prob_conflict_all_mw.tif")
+  # Add General Conflict into Bear Data:
+prob.conflict <- rast("Data/processed/prob_conflict_all.tif")
 bear.prob.conflict <- terra::extract(prob.conflict, vect(bear.conflict), mean, na.rm=TRUE)
 bear.conflict$conflictprob <- bear.prob.conflict[,2]
 
@@ -25,28 +34,37 @@ bear.conflict.df <- bear.conflict %>%
 
 colnames(bear.conflict.df) <- c("conflict", "CCSNAME.ps", "dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "conflictprob")
 
+  # Scale Data:
 bear.conflict.df.scl <- bear.conflict.df %>% 
   mutate_at(c("dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "conflictprob"), scale) 
 
+
+# Run Bear Conflict Models: -----------------------------------------------
 t_prior <- student_t(df = 7, location = 0, scale = 1.5)
 int_prior <- normal(location = 0, scale = NULL, autoscale = FALSE)
 
 SEED<-14124869
 
+  # Full Model:
 bear.full.mod <- stan_glmer(conflict ~ dist2pa + dist2grizz + livestockOps + rowcropOps + connectivity + grizzinc + habsuit + humandens + conflictprob + (1 | CCSNAME.ps), 
                            data = bear.conflict.df.scl,
                            family = binomial(link = "logit"), # define our binomial glm
                            prior = t_prior, prior_intercept = int_prior, QR=TRUE,
                            iter = 3000, chains=5,
                            seed = SEED)
-
+  # Full Model + Quadratic for GenConf:
 bear.full.mod.quad <- update(bear.full.mod, formula = conflict ~ dist2pa + dist2grizz + livestockOps + rowcropOps  + connectivity + grizzinc + habsuit + humandens + conflictprob + I(conflictprob^2) + (1 | CCSNAME.ps), QR=TRUE)
 
+  # Full Model - GenConf:
 bear.no.conf <- update(bear.full.mod, formula = conflict ~ dist2pa + dist2grizz + livestockOps + rowcropOps  + connectivity + grizzinc + habsuit + humandens + (1 | CCSNAME.ps), QR=TRUE)
 
+  # Intercept Only Model: 
 bear.int.only <- update(bear.full.mod, formula = conflict ~ 1 + (1 | CCSNAME.ps) , QR = FALSE)
 
+saveRDS(bear.full.mod.quad, "Data/processed/bear_quad_reg.rds")
+saveRDS(bear.int.only, "Data/processed/bear_int_only.rds")
 
+# Model Comparison: -------------------------------------------------------
 loo1 <- loo(bear.full.mod, save_psis = TRUE)
 loo2 <- loo(bear.full.mod.quad, save_psis = TRUE)
 loo3 <- loo(bear.no.conf, save_psis = TRUE)
@@ -84,7 +102,7 @@ round(mean(xor(ploo3>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
 round(mean(xor(ploo0>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
 
 
-# plot results ------------------------------------------------------------
+# Plot results ------------------------------------------------------------
 
 posterior <- as.matrix(bear.full.mod.quad)
 parnames <- names(fixef(bear.full.mod.quad))[2:11]
@@ -113,13 +131,14 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_elpd_draws(bear.full.mod.quad, # changing to add_elpd_draws from add_fitted_draws
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
 
 postdraws$dist2pa_un <- (postdraws$dist2pa * attributes(bear.conflict.df.scl$dist2pa)[[3]])+attributes(bear.conflict.df.scl$dist2pa)[[2]]
 
+  # Plot Dist to PA:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(dist2pa_un, conflictprob) %>% 
@@ -149,13 +168,14 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_elpd_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
 
 postdraws$dist2grizz_un <- (postdraws$dist2grizz * attributes(bear.conflict.df.scl$dist2grizz)[[3]])+attributes(bear.conflict.df.scl$dist2grizz)[[2]]
 
+  # Plot Dist to GrizzPop:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(dist2grizz_un, conflictprob) %>% 
@@ -185,13 +205,14 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_elpd_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
 
 postdraws$livestockOps_un <- (postdraws$livestockOps * attributes(bear.conflict.df.scl$livestockOps)[[3]])+attributes(bear.conflict.df.scl$livestockOps)[[2]]
 
+  # Plot Livestock Dens:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(livestockOps_un, conflictprob) %>% 
@@ -228,6 +249,7 @@ postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad,
 
 postdraws$rowcropOps_un <- (postdraws$rowcropOps * attributes(bear.conflict.df.scl$rowcropOps)[[3]])+attributes(bear.conflict.df.scl$rowcropOps)[[2]]
 
+  # Plot Row Crop Dens:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(rowcropOps_un, conflictprob) %>% 
@@ -264,6 +286,7 @@ postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad,
 
 postdraws$connectivity_un <- (postdraws$connectivity * attributes(bear.conflict.df.scl$connectivity)[[3]])+attributes(bear.conflict.df.scl$connectivity)[[2]]
 
+  # Plot Biophys Current:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(connectivity_un, conflictprob) %>% 
@@ -300,6 +323,7 @@ postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad,
 
 postdraws$grizzinc_un <- (postdraws$grizzinc * attributes(bear.conflict.df.scl$grizzinc)[[3]]) + attributes(bear.conflict.df.scl$grizzinc)[[2]]
 
+  # Plot GrizzInc:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(grizzinc_un, conflictprob) %>% 
@@ -336,6 +360,7 @@ postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad,
 
 postdraws$habsuit_un <- (postdraws$habsuit * attributes(bear.conflict.df.scl$habsuit)[[3]])+attributes(bear.conflict.df.scl$habsuit)[[2]]
 
+  #Plot BHS:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(habsuit_un, conflictprob) %>% 
@@ -372,6 +397,7 @@ postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad,
   
 postdraws$humandens_un <- (postdraws$humandens * attributes(bear.conflict.df.scl$humandens)[[3]])+attributes(bear.conflict.df.scl$humandens)[[2]]
   
+  # Plot Pop Dens:
 plot.df <- postdraws %>% 
     mutate_at(., vars(conflictprob), as.factor) %>% 
     group_by(humandens_un, conflictprob) %>% 
@@ -389,6 +415,7 @@ humandens.plot <- ggplot(data=plot.df) +
   xlab("Human Population Density")+
          theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
          
+  # Add Plots together:
 biophys.p <-  connectivity.plot + habsuit.plot + dist2pa.plot + dist2grizz.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')         
 
 social.p <- grizzinc.plot + humandens.plot + livestockOps.plot + rowcropOps.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
@@ -412,7 +439,11 @@ dist.2.grizz <- rast("Data/processed/dist2grizz_pop_raster.tif")
 bhs <- rast("Data/processed/bhs_SOI_10km.tif")
 grizinc <- rast("Data/processed/grizz_inc_SOI_10km.tif")
 biophys <- rast("Data/processed/biophys_SOI_10km.tif")
-conflict <- rast("Data/processed/prob_conflict_all_mw.tif")
+conflict <- rast("Data/processed/prob_conflict_all.tif")
+
+
+pop.d.crop <- crop(pop.dens, animal.dens)
+pop.dens <- mask(pop.d.crop, animal.dens)
 
 #Create global intercept raster
 global.int <- dist.2.pa
@@ -441,7 +472,7 @@ biophys.scl <- (biophys - attributes(bear.conflict.df.scl$connectivity)[[2]])/at
 
 conflict.scl <- (conflict - attributes(bear.conflict.df.scl$conflictprob)[[2]])/attributes(bear.conflict.df.scl$conflictprob)[[3]]
 
-#generate lin pred
+  # Generate lin pred
 dist2pa.pred <- dist.2.pa.scl * fixed.effects[['dist2pa']]
 pop.dens.pred <- pop.dens.scl * fixed.effects[['humandens']]
 animal.dens.pred <- animal.dens.scl * fixed.effects[['livestockOps']]
@@ -453,10 +484,9 @@ biophys.pred <- biophys.scl * fixed.effects[['connectivity']]
 conflict.pred <- conflict.scl * fixed.effects[['conflictprob']]
 conflict.quad.prd <- (conflict.scl)^2 * fixed.effects[['I(conflictprob^2)']]
 
+  # Add our Rasters:
 pred.stack <- c(dist2pa.pred, pop.dens.pred, animal.dens.pred,rowcrop.dens.pred, grizz.dist.pred, bhs.pred, grizzinc.pred, biophys.pred, conflict.pred, conflict.quad.prd)
 
 linpred.rst <- sum(pred.stack)
 prob.rast <- (exp(linpred.rst))/(1 + exp(linpred.rst))
 writeRaster(prob.rast, "Data/processed/prob_conflict_bear_mw.tif")
-saveRDS(bear.full.mod.quad, "Data/processed/bear_quad_reg.rds")
-saveRDS(bear.int.only, "Data/processed/bear_int_only.rds")

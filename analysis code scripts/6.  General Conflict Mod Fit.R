@@ -65,6 +65,8 @@ loo1 <- loo(post.pa.full, save_psis = TRUE)
 loo2 <- loo(post.pa.full.quad, save_psis = TRUE)
 loo0 <- loo(post.int.only, save_psis = TRUE)
 
+loo_compare(loo1, loo2, loo0)
+
 preds <- posterior_epred(post.pa.full)
 preds2 <- posterior_epred(post.pa.full.quad)
 preds0 <- posterior_epred(post.int.only)
