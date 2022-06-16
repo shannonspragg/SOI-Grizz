@@ -92,7 +92,7 @@ pr2 <- as.integer(pred2 >= 0.5)
 pr1 <- as.integer(pred1 >= 0.5)
 pr0 <- as.integer(pred0 >=0.5)
 
-round(mean(xor(pr3,as.integer(bear.conflict.df.scl$conflict==0))),2) #.68
+round(mean(xor(pr3,as.integer(bear.conflict.df.scl$conflict==0))),2) #.68 
 round(mean(xor(pr2,as.integer(bear.conflict.df.scl$conflict==0))),2) #.68
 round(mean(xor(pr1,as.integer(bear.conflict.df.scl$conflict==0))),2) #0.68
 round(mean(xor(pr0,as.integer(bear.conflict.df.scl$conflict==0))),2) #0.68
@@ -110,6 +110,39 @@ round(mean(xor(ploo2>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
 round(mean(xor(ploo3>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
 round(mean(xor(ploo0>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
 
+# Building plots of results -----------------------------------------------
+
+# Plotting AUC
+opar <- par()
+par(pty = "s")
+pROC::roc(bear.conflict.df.scl$conflict, bear.full.mod.quad$fitted.values, plot=TRUE, legacy.axes=TRUE, percent=TRUE , 
+          xlab= "False Positive Percentage", ylab= "True Positive Percentage",
+          col="#377eb8", lwd=4, print.auc=TRUE)
+pROC::plot.roc(bear.conflict.df.scl$conflict, bear.full.mod.quad$fitted.values, percent=TRUE, col='#4daf4a', lwd=4, print.auc=TRUE, add=TRUE, print.auc.y=60)
+
+legend("bottomright", legend=c("Full Model", "Varying Intercept Model"),
+       col=c("#377eb8", "#4daf4a"), lwd = 4)
+par(opar)
+
+# We will use full model without quadratic term as their predictive accuracy is similar and the predictor estimates seem more stable
+
+# Plot Effects of Posterior Coefficients:
+library(bayestestR)
+# install.packages("see")
+library(see)
+library(sjPlot)
+library(ggplot2)
+bear.quad.result <- p_direction(bear.full.mod.quad)
+bear.quad.preds.plot <- plot(bear.quad.result, title = "Predictor Effects for Bear Conflict")
+bear.quad.preds.plot
+# this is the max probability of effect (MPE), showing the probability of a predictor having a positive or negative effect
+
+plot(post.pa.full, pars = c("dist.2.pa.ps","dist.2.met.ps",
+                            "animal.farm.dens.ps",
+                            "ground.crop.dens.ps",
+                            "pop.dens"), main = "Predictor Effects for General Wildlife Conflict")
+
+saveRDS(post.pa.full.preds.plot, "Data/processed/post_pa_full_predsplot.rds")
 
 # Plot results ------------------------------------------------------------
 
