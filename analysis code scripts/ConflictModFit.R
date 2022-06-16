@@ -1,3 +1,10 @@
+
+# General Conflict Model --------------------------------------------------
+  ## Here we run our general conflict full, quad, and null models. We test the data simulation and plot results, then produce the prob general conflict
+  ## raster for the bear analysis.
+
+
+# Load Packages: ----------------------------------------------------------
 library(rstanarm)
 library(tidyverse)
 library(sf)
@@ -9,6 +16,9 @@ library(ggeffects)
 library(viridis)
 library(patchwork)
 theme_set(bayesplot::theme_default(base_family = "sans"))
+
+
+# Bring in Data: ----------------------------------------------------------
 warp.pres.abs <- st_read(here::here("./Data/processed/pres_abs_final.shp")) %>% st_drop_geometry()
 
 #filter some of the absences
@@ -16,26 +26,40 @@ pres.abs.filter <- warp.pres.abs %>%
   filter(anyCnfl == 0) %>%
   slice_sample(n = 9000) %>%
   bind_rows(warp.pres.abs %>% filter(anyCnfl != 0)) %>% 
-  select(., c(anyCnfl, dst__PA, dst_t_M, Anml_Fr, Grnd_Cr, CCSNAME, Human_Dens)) 
+  dplyr::select(., c(anyCnfl, dst__PA, dst_t_M, Anml_Fr, Grnd_Cr, CCSNAME, Human_Dens)) 
 
 colnames(pres.abs.filter) <- c("conflict_presence_ps", "dist.2.pa.ps", "dist.2.met.ps", "animal.farm.dens.ps", "ground.crop.dens.ps", "CCSNAME.ps", "pop.dens")
 
-#scale for analysis
+
+# Scale Data for Analysis: ------------------------------------------------
+  ## Here we scale the predictors for analysis
 pres.abs.scl <- pres.abs.filter %>% 
   mutate_at(c("dist.2.pa.ps", "dist.2.met.ps", "animal.farm.dens.ps", "ground.crop.dens.ps",  "pop.dens"), scale)
 
+
+# Run General Conflict Models: --------------------------------------------
 t_prior <- student_t(df = 7, location = 0, scale = 1.5)
 SEED<-14124869
+  # Full Model:
 post.pa.full <- stan_glmer(conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps + animal.farm.dens.ps + ground.crop.dens.ps + pop.dens + (1 | CCSNAME.ps), 
                            data = pres.abs.scl,
                            family = binomial(link = "logit"), # define our binomial glm
                            prior = t_prior, prior_intercept = t_prior, QR=TRUE,
                            iter = 3000, chains=5,
-                           seed = SEED) # we add seed for reproducability
+                           seed = SEED) # we add seed for reproducibility
+
+  # Full Model + Quadratic for Pop Dens:
 post.pa.full.quad <- update(post.pa.full, formula = conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps + animal.farm.dens.ps + ground.crop.dens.ps + pop.dens + I(pop.dens^2) + (1 | CCSNAME.ps), QR = TRUE)
 
+  # Intercept-only model:
 post.int.only <-  update(post.pa.full, formula = conflict_presence_ps ~ 1+ (1 | CCSNAME.ps), QR = FALSE)
 
+saveRDS(post.pa.full, "Data/processed/post_pa_full.rds")
+saveRDS(post.pa.full.quad, "Data/processed/post_pa_full_quad.rds")
+saveRDS(post.int.only, "Data/processed/post_int_only.rds")
+
+
+# Run LOOIC and Posterior Comparisons: ------------------------------------
 loo1 <- loo(post.pa.full, save_psis = TRUE)
 loo2 <- loo(post.pa.full.quad, save_psis = TRUE)
 loo0 <- loo(post.int.only, save_psis = TRUE)
@@ -57,15 +81,15 @@ ploo=E_loo(preds, loo1$psis_object, type="mean", log_ratios = -log_lik(post.pa.f
 ploo2 <- E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(post.pa.full.quad))$value
 
 ploo0 <- E_loo(preds0, loo0$psis_object, type="mean", log_ratios = -log_lik(post.int.only))$value
-# LOO classification accuracy
+
+  # LOO classification accuracy
 round(mean(xor(ploo>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89
 round(mean(xor(ploo2>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89
 round(mean(xor(ploo0>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82
 
 # Building plots of results -----------------------------------------------
 
-
-##AUC
+  # Plotting AUC
 opar <- par()
 par(pty = "s")
 pROC::roc(pres.abs.scl$conflict_presence_ps, post.pa.full$fitted.values, plot=TRUE, legacy.axes=TRUE, percent=TRUE , 
@@ -77,7 +101,10 @@ legend("bottomright", legend=c("Full Model", "Varying Intercept Model"),
        col=c("#377eb8", "#4daf4a"), lwd = 4)
 par(opar)
 
-#using full model without quadratic term as their predictive accuracy is similar and the predictor estimates seem more stable
+# We will use full model without quadratic term as their predictive accuracy is similar and the predictor estimates seem more stable
+
+
+# Simulate Data & Posterior Predictive Draws: -----------------------------
 
 posterior <- as.matrix(post.pa.full)
 p <- mcmc_intervals(posterior,
@@ -109,6 +136,7 @@ postdraws <- tidybayes::add_fitted_draws(post.pa.full,
 
 postdraws$animal.farm.dens <- (postdraws$animal.farm.dens.ps * attributes(pres.abs.scl$animal.farm.dens.ps)[[3]])+attributes(pres.abs.scl$animal.farm.dens.ps)[[2]]
 
+  # Plotting Livestock Density:
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(animal.farm.dens, pop.dens) %>% 
@@ -141,6 +169,7 @@ postdraws <- tidybayes::add_fitted_draws(post.pa.full,
 
 postdraws$ground.crop.dens <- (postdraws$ground.crop.dens.ps * attributes(pres.abs.scl$ground.crop.dens.ps)[[3]])+attributes(pres.abs.scl$ground.crop.dens.ps)[[2]]
 
+  # Plotting Row Crop Dens:
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(ground.crop.dens, pop.dens) %>% 
@@ -159,6 +188,7 @@ ground.dens.plot <- ggplot(data=plot.df) +
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
 
+
 simdata <- pres.abs.scl %>%
   modelr::data_grid(dist.2.pa.ps = mean(dist.2.pa.ps),
                     dist.2.met.ps = seq_range(dist.2.met.ps, n=300),
@@ -173,6 +203,7 @@ postdraws <- tidybayes::add_fitted_draws(post.pa.full,
 
 postdraws$dist.2.met <- (postdraws$dist.2.met.ps * attributes(pres.abs.scl$dist.2.met.ps)[[3]])+attributes(pres.abs.scl$dist.2.met.ps)[[2]]
 
+  # Plot Dist 2 Metro Areas:
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(dist.2.met, pop.dens) %>% 
@@ -205,6 +236,7 @@ postdraws <- tidybayes::add_fitted_draws(post.pa.full,
 
 postdraws$dist.2.pa <- (postdraws$dist.2.pa.ps * attributes(pres.abs.scl$dist.2.pa.ps)[[3]])+attributes(pres.abs.scl$dist.2.pa.ps)[[2]]
 
+  # Plotting Dist 2 PA's:
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(dist.2.pa, pop.dens) %>% 
@@ -236,22 +268,22 @@ ccs.sf <- st_read("Data/processed/SOI_CCS_10km.shp")
 ccs.sf.join <- ccs.sf %>% left_join(., var.int)
 ccs.sf.join[ccs.sf$CCSNAME == "Powell River A",]$`(Intercept)` <- 0 #no points from this CCS; setting to 0 results in use of global intercept
 
-#load predictor rasters
+  # Load predictor rasters:
 dist.2.pa <- rast("Data/processed/dist2pa_SOI_10km.tif") 
 dist.2.met <- rast("Data/processed/dist2metro_SOI_10km.tif")
 pop.dens <- rast("Data/processed/human_dens_SOI_10km.tif")
 animal.dens <- rast("Data/processed/animal_production_density_cropped.tif")
 rowcrop.dens <- rast("Data/processed/ground_crop_density_cropped.tif")
 
-#Create global intercept raster
+  # Create global intercept raster
 global.int <- dist.2.met
 global.int[!is.na(global.int)] <- fixed.effects[[1]] 
 
-#create var int raster
+  # Create var int raster
 ccs.vect <- vect(ccs.sf.join)
 ccs.int <- rasterize(ccs.vect, dist.2.met, field='(Intercept)')
 
-#scale predictor values based on dataframe
+  # Scale predictor values based on dataframe
 dist.2.pa.scl <- (dist.2.pa - attributes(pres.abs.scl$dist.2.pa.ps)[[2]])/attributes(pres.abs.scl$dist.2.pa.ps)[[3]]
 dist.2.met.scl <- (dist.2.met - attributes(pres.abs.scl$dist.2.met.ps)[[2]])/attributes(pres.abs.scl$dist.2.met.ps)[[3]]
 pop.dens.scl <- (pop.dens - attributes(pres.abs.scl$pop.dens)[[2]])/attributes(pres.abs.scl$pop.dens)[[3]]
@@ -264,11 +296,13 @@ pop.dens.pred <- pop.dens.scl * fixed.effects[['pop.dens']]
 animal.dens.pred <- animal.dens.scl * fixed.effects[['animal.farm.dens.ps']]
 rowcrop.dens.pred <- row.crop.dens.scl * fixed.effects[['ground.crop.dens.ps']]
 
+  # Combine our Rasters:
 pred.stack <- c(global.int, ccs.int, dist.2.pa.pred, dist.2.met.pred, pop.dens.pred, animal.dens.pred, rowcrop.dens.pred)
 linpred.rast <- sum(pred.stack)
 prob.rast <- (exp(linpred.rast))/(1 + exp(linpred.rast))
 
-writeRaster(prob.rast, "Data/processed/prob_conflict_all_mw.tif")
-saveRDS(post.int.only, "Data/processed/int_only_reg.rds")
-saveRDS(post.pa.full, "Data/processed/full_mod_reg.rds")
-saveRDS(post.pa.full.quad, "Data/processed/full_mod_quad.rds")
+  # Save these:
+writeRaster(prob.rast, "Data/processed/prob_conflict_all.tif")
+# saveRDS(post.int.only, "Data/processed/int_only_reg.rds")
+# saveRDS(post.pa.full, "Data/processed/full_mod_reg.rds")
+# saveRDS(post.pa.full.quad, "Data/processed/full_mod_quad.rds")

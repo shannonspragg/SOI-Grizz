@@ -28,7 +28,7 @@ warp.all$anyConflict <- 1  # so this gives 1's for all species reports now
 
 # Generate Random Points for Pseudo-absences: -----------------------------
 set.seed(2345)
-p.abs.pts <- randomPoints(raster(grizz.crop), 9000)
+p.abs.pts <- randomPoints(raster(grizz.crop), 11000)
 
 #plot(grizz.dens)
 #plot(p.abs.pts, add=TRUE) # This gives us our absence points!
