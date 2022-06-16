@@ -281,9 +281,12 @@ ccs.sf.join[ccs.sf$CCSNAME == "Powell River A",]$`(Intercept)` <- 0 #no points f
   # Load predictor rasters:
 dist.2.pa <- rast("Data/processed/dist2pa_SOI_10km.tif") 
 dist.2.met <- rast("Data/processed/dist2metro_SOI_10km.tif")
-pop.dens <- rast("Data/processed/human_dens_SOI_10km.tif")
+pop.dens <- rast("Data/processed/human_dens_SOI_10km.tif") # need to match extent
 animal.dens <- rast("Data/processed/animal_production_density_cropped.tif")
 rowcrop.dens <- rast("Data/processed/ground_crop_density_cropped.tif")
+
+pop.d.crop <- crop(pop.dens, animal.dens)
+pop.dens <- mask(pop.d.crop, animal.dens)
 
   # Create global intercept raster
 global.int <- dist.2.met
