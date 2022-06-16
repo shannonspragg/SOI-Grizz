@@ -52,6 +52,7 @@ bear.full.mod <- stan_glmer(conflict ~ dist2pa + dist2grizz + livestockOps + row
                            prior = t_prior, prior_intercept = int_prior, QR=TRUE,
                            iter = 3000, chains=5,
                            seed = SEED)
+
   # Full Model + Quadratic for GenConf:
 bear.full.mod.quad <- update(bear.full.mod, formula = conflict ~ dist2pa + dist2grizz + livestockOps + rowcropOps  + connectivity + grizzinc + habsuit + humandens + conflictprob + I(conflictprob^2) + (1 | CCSNAME.ps), QR=TRUE)
 
@@ -63,12 +64,20 @@ bear.int.only <- update(bear.full.mod, formula = conflict ~ 1 + (1 | CCSNAME.ps)
 
 saveRDS(bear.full.mod.quad, "Data/processed/bear_quad_reg.rds")
 saveRDS(bear.int.only, "Data/processed/bear_int_only.rds")
+saveRDS(bear.full.mod, "Data/processed/bear_full.rds")
+saveRDS(bear.no.conf, "Data/processed/bear_no_conf.rds")
 
 # Model Comparison: -------------------------------------------------------
 loo1 <- loo(bear.full.mod, save_psis = TRUE)
 loo2 <- loo(bear.full.mod.quad, save_psis = TRUE)
 loo3 <- loo(bear.no.conf, save_psis = TRUE)
 loo0 <- loo(bear.int.only, save_psis = TRUE)
+
+saveRDS(loo1, "Data/processed/bear_full_loo.rds")
+saveRDS(loo2, "Data/processed/bear_full_quad_loo.rds")
+saveRDS(loo3, "Data/processed/bear_no_conf_loo.rds")
+saveRDS(loo0, "Data/processed/bear_int_only_loo.rds")
+
 
 preds3 <- posterior_epred(bear.no.conf)
 preds2 <- posterior_epred(bear.full.mod.quad)
