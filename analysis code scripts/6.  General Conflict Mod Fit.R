@@ -15,6 +15,7 @@ library(tidybayes)
 library(ggeffects)
 library(viridis)
 library(patchwork)
+library(modelr)
 theme_set(bayesplot::theme_default(base_family = "sans"))
 
 
@@ -73,19 +74,23 @@ pred0 <- colMeans(preds0)
 pr <- as.integer(pred >= 0.5)
 pr2 <- as.integer(pred2 >= 0.5)
 pr0 <- as.integer(pred0 >=0.5)
-round(mean(xor(pr,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89
-round(mean(xor(pr2,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.88
-round(mean(xor(pr0,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82
+round(mean(xor(pr,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89  # 0.89
+round(mean(xor(pr2,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.88 # 0.89
+round(mean(xor(pr0,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82 # 0.82
 
 ploo=E_loo(preds, loo1$psis_object, type="mean", log_ratios = -log_lik(post.pa.full))$value
 ploo2 <- E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(post.pa.full.quad))$value
 
 ploo0 <- E_loo(preds0, loo0$psis_object, type="mean", log_ratios = -log_lik(post.int.only))$value
 
+saveRDS(loo1, "Data/processed/post_pa_full_loo.rds")
+saveRDS(loo2, "Data/processed/post_pa_full_quad_loo.rds")
+saveRDS(loo0, "Data/processed/post_int_only_loo.rds")
+
   # LOO classification accuracy
-round(mean(xor(ploo>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89
-round(mean(xor(ploo2>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89
-round(mean(xor(ploo0>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82
+round(mean(xor(ploo>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89  # 0.89
+round(mean(xor(ploo2>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89 # 0.89
+round(mean(xor(ploo0>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82 # 0.82
 
 # Building plots of results -----------------------------------------------
 
@@ -129,20 +134,25 @@ simdata <- pres.abs.scl %>%
             ground.crop.dens.ps = mean(ground.crop.dens.ps),
             pop.dens = quantile(pres.abs.scl$pop.dens, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(post.pa.full, 
-                                 newdata=simdata,
-                                 ndraws=1000,
-                                 re_formula=NA)
+# postdraws <- tidybayes::add_fitted_draws(post.pa.full, 
+#                                  newdata=simdata,
+#                                  ndraws=1000,
+#                                  re_formula=NA)
+
+postdraws <- tidybayes::add_epred_draws(post.pa.full, 
+                                         newdata=simdata,
+                                         ndraws=1000,
+                                         re_formula=NA)
 
 postdraws$animal.farm.dens <- (postdraws$animal.farm.dens.ps * attributes(pres.abs.scl$animal.farm.dens.ps)[[3]])+attributes(pres.abs.scl$animal.farm.dens.ps)[[2]]
 
-  # Plotting Livestock Density:
+  # Plotting Livestock Density: # NOTE: changing .value to .epred to match update from add_epred_draws
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(animal.farm.dens, pop.dens) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  dplyr::summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 animal.dens.plot <- ggplot(data=plot.df) +
@@ -162,7 +172,7 @@ simdata <- pres.abs.scl %>%
                     ground.crop.dens.ps = seq_range(ground.crop.dens.ps,n=300),
                     pop.dens = quantile(pres.abs.scl$pop.dens, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(post.pa.full, 
+postdraws <- tidybayes::add_epred_draws(post.pa.full, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -173,9 +183,9 @@ postdraws$ground.crop.dens <- (postdraws$ground.crop.dens.ps * attributes(pres.a
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(ground.crop.dens, pop.dens) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 ground.dens.plot <- ggplot(data=plot.df) +
@@ -196,7 +206,7 @@ simdata <- pres.abs.scl %>%
                     ground.crop.dens.ps = mean(ground.crop.dens.ps),
                     pop.dens = quantile(pres.abs.scl$pop.dens, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(post.pa.full, 
+postdraws <- tidybayes::add_epred_draws(post.pa.full, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -207,9 +217,9 @@ postdraws$dist.2.met <- (postdraws$dist.2.met.ps * attributes(pres.abs.scl$dist.
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(dist.2.met, pop.dens) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 dist.2met.plot <- ggplot(data=plot.df) +
@@ -229,7 +239,7 @@ simdata <- pres.abs.scl %>%
                     ground.crop.dens.ps = mean(ground.crop.dens.ps),
                     pop.dens = quantile(pres.abs.scl$pop.dens, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(post.pa.full, 
+postdraws <- tidybayes::add_epred_draws(post.pa.full, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -240,9 +250,9 @@ postdraws$dist.2.pa <- (postdraws$dist.2.pa.ps * attributes(pres.abs.scl$dist.2.
 plot.df <- postdraws %>% 
   mutate_at(., vars(pop.dens), as.factor) %>% 
   group_by(dist.2.pa, pop.dens) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 dist.2pa.plot <- ggplot(data=plot.df) +
@@ -257,7 +267,7 @@ dist.2pa.plot <- ggplot(data=plot.df) +
 
 p.all <- animal.dens.plot + ground.dens.plot + dist.2met.plot + dist.2pa.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
 
-
+saveRDS(p.all, "Data/processed/general_conflict_all_pred_plot.rds")
 
 # Generating raster predictions -------------------------------------------
 library(terra)
