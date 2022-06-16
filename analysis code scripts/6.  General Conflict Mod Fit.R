@@ -108,6 +108,13 @@ par(opar)
 
 # We will use full model without quadratic term as their predictive accuracy is similar and the predictor estimates seem more stable
 
+  # Plot Effects of Posterior Coefficients:
+library(bayestestR)
+install.packages("see")
+library(see)
+post.pa.result <- p_direction(post.pa.full)
+plot(post.pa.result)
+
 
 # Simulate Data & Posterior Predictive Draws: -----------------------------
 
