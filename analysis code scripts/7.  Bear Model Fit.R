@@ -173,7 +173,7 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_elpd_draws(bear.full.mod.quad, # changing to add_elpd_draws from add_fitted_draws
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, # changing to add_elpd_draws from add_fitted_draws
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -184,9 +184,9 @@ postdraws$dist2pa_un <- (postdraws$dist2pa * attributes(bear.conflict.df.scl$dis
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(dist2pa_un, conflictprob) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 dist2pa.plot <- ggplot(data=plot.df) +
@@ -210,7 +210,7 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_elpd_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -221,9 +221,9 @@ postdraws$dist2grizz_un <- (postdraws$dist2grizz * attributes(bear.conflict.df.s
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(dist2grizz_un, conflictprob) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 dist2grizz.plot <- ggplot(data=plot.df) +
@@ -247,7 +247,7 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_elpd_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -258,9 +258,9 @@ postdraws$livestockOps_un <- (postdraws$livestockOps * attributes(bear.conflict.
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(livestockOps_un, conflictprob) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 livestockOps.plot <- ggplot(data=plot.df) +
@@ -284,7 +284,7 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -295,9 +295,9 @@ postdraws$rowcropOps_un <- (postdraws$rowcropOps * attributes(bear.conflict.df.s
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(rowcropOps_un, conflictprob) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 rowcropOps.plot <- ggplot(data=plot.df) +
@@ -321,7 +321,7 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -332,9 +332,9 @@ postdraws$connectivity_un <- (postdraws$connectivity * attributes(bear.conflict.
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(connectivity_un, conflictprob) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 connectivity.plot <- ggplot(data=plot.df) +
@@ -358,7 +358,7 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -369,9 +369,9 @@ postdraws$grizzinc_un <- (postdraws$grizzinc * attributes(bear.conflict.df.scl$g
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(grizzinc_un, conflictprob) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 grizzinc.plot <- ggplot(data=plot.df) +
@@ -395,7 +395,7 @@ simdata <- bear.conflict.df.scl %>%
                     humandens = mean(humandens),
                     conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
 
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, 
                                          newdata=simdata,
                                          ndraws=1000,
                                          re_formula=NA)
@@ -406,9 +406,9 @@ postdraws$habsuit_un <- (postdraws$habsuit * attributes(bear.conflict.df.scl$hab
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(habsuit_un, conflictprob) %>% 
-  summarise(., mean = mean(.value),
-            lo = quantile(.value, 0.2),
-            hi = quantile(.value, 0.8))
+  summarise(., mean = mean(.epred),
+            lo = quantile(.epred, 0.2),
+            hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 habsuit.plot <- ggplot(data=plot.df) +
@@ -432,7 +432,7 @@ habsuit.plot <- ggplot(data=plot.df) +
                       humandens = seq_range(humandens, n=300),
                       conflictprob = quantile(bear.conflict.df.scl$conflictprob, probs = c(0.1, 0.5, 0.9)))
   
-postdraws <- tidybayes::add_fitted_draws(bear.full.mod.quad, 
+postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad, 
                                            newdata=simdata,
                                            ndraws=1000,
                                            re_formula=NA)
@@ -443,9 +443,9 @@ postdraws$humandens_un <- (postdraws$humandens * attributes(bear.conflict.df.scl
 plot.df <- postdraws %>% 
     mutate_at(., vars(conflictprob), as.factor) %>% 
     group_by(humandens_un, conflictprob) %>% 
-    summarise(., mean = mean(.value),
-              lo = quantile(.value, 0.2),
-              hi = quantile(.value, 0.8))
+    summarise(., mean = mean(.epred),
+              lo = quantile(.epred, 0.2),
+              hi = quantile(.epred, 0.8))
   
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 humandens.plot <- ggplot(data=plot.df) +
@@ -462,6 +462,8 @@ biophys.p <-  connectivity.plot + habsuit.plot + dist2pa.plot + dist2grizz.plot 
 
 social.p <- grizzinc.plot + humandens.plot + livestockOps.plot + rowcropOps.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
 
+saveRDS(biophys.p, "Data/processed/biophys_bear_conf_plots.rds")
+saveRDS(social.p, "Data/processed/social_bear_conf_plots.rds")
 
 # generate spatial pred ---------------------------------------------------
 fixed.effects <- fixef(bear.full.mod.quad)
