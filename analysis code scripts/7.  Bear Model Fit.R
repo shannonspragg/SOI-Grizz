@@ -488,6 +488,8 @@ conflict <- rast("Data/processed/prob_conflict_all.tif")
 
 pop.d.crop <- crop(pop.dens, animal.dens)
 pop.dens <- mask(pop.d.crop, animal.dens)
+bhs <- crop(bhs, animal.dens)
+grizinc <- crop(grizinc, animal.dens)
 
 #Create global intercept raster
 global.int <- dist.2.pa
@@ -533,4 +535,4 @@ pred.stack <- c(dist2pa.pred, pop.dens.pred, animal.dens.pred,rowcrop.dens.pred,
 
 linpred.rst <- sum(pred.stack)
 prob.rast <- (exp(linpred.rst))/(1 + exp(linpred.rst))
-writeRaster(prob.rast, "Data/processed/prob_conflict_bear_mw.tif")
+writeRaster(prob.rast, "Data/processed/prob_conflict_bear.tif")
