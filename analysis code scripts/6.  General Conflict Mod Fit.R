@@ -308,6 +308,7 @@ rowcrop.dens <- rast("Data/processed/ground_crop_density_cropped.tif")
 
 pop.d.crop <- crop(pop.dens, animal.dens)
 pop.dens <- mask(pop.d.crop, animal.dens)
+writeRaster(pop.dens, "Data/processed/pop_dens_SOI_10km.tif")
 
   # Create global intercept raster
 global.int <- dist.2.met

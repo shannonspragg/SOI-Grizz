@@ -492,6 +492,8 @@ pop.d.crop <- crop(pop.dens, animal.dens)
 pop.dens <- mask(pop.d.crop, animal.dens)
 bhs <- crop(bhs, animal.dens)
 grizinc <- crop(grizinc, animal.dens)
+writeRaster(bhs, "Data/processed/bhs_SOI_10km.tif", overwrite=TRUE)
+writeRaster(grizinc, "Data/processed/grizinc_SOI_10km.tif")
 
 #Create global intercept raster
 global.int <- dist.2.pa
