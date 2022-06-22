@@ -113,18 +113,22 @@ par(opar)
   # Plot Effects of Posterior Coefficients:
 library(bayestestR)
 # install.packages("see")
+#install.packages("insight")
 library(see)
-library(sjPlot)
+library(insight)
+library(ggplot2)
+
 post.pa.result <- p_direction(post.pa.full)
 post.pa.full.preds.plot <- plot(post.pa.result, title = "Predictor Effects for General Wildlife Conflict")
   # this is the max probability of effect (MPE), showing the probability of a predictor having a positive or negative effect
 
-plot(post.pa.full, pars = c("dist.2.pa.ps","dist.2.met.ps",
+gen_conf_coef_plot <- plot(post.pa.full, pars = c("dist.2.pa.ps","dist.2.met.ps",
                             "animal.farm.dens.ps",
                             "ground.crop.dens.ps",
                             "pop.dens"), main = "Predictor Effects for General Wildlife Conflict")
 
 saveRDS(post.pa.full.preds.plot, "Data/processed/post_pa_full_predsplot.rds")
+saveRDS(gen_conf_coef_plot, "Data/processed/post_pa_coef_plot.rds")
 
 # Simulate Data & Posterior Predictive Draws: -----------------------------
 

@@ -129,20 +129,22 @@ par(opar)
 # Plot Effects of Posterior Coefficients:
 library(bayestestR)
 # install.packages("see")
+#install.packages("insight")
 library(see)
-library(sjPlot)
+library(insight)
 library(ggplot2)
-bear.quad.result <- p_direction(bear.full.mod.quad)
+
 bear.quad.preds.plot <- plot(bear.quad.result, title = "Predictor Effects for Bear Conflict")
 bear.quad.preds.plot
 # this is the max probability of effect (MPE), showing the probability of a predictor having a positive or negative effect
 
-plot(post.pa.full, pars = c("dist.2.pa.ps","dist.2.met.ps",
+bear.coef.plot <- plot(post.pa.full, pars = c("dist.2.pa.ps","dist.2.met.ps",
                             "animal.farm.dens.ps",
                             "ground.crop.dens.ps",
                             "pop.dens"), main = "Predictor Effects for General Wildlife Conflict")
 
-saveRDS(post.pa.full.preds.plot, "Data/processed/post_pa_full_predsplot.rds")
+saveRDS(bear.quad.preds.plot, "Data/processed/bear_quad_predsplot.rds")
+saveRDS(bear.coef.plot, "Data/processed/bear_coef_plot.rds")
 
 # Plot results ------------------------------------------------------------
 
