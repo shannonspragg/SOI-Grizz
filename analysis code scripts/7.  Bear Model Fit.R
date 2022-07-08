@@ -78,6 +78,8 @@ saveRDS(loo2, "Data/processed/bear_full_quad_loo.rds")
 saveRDS(loo3, "Data/processed/bear_no_conf_loo.rds")
 saveRDS(loo0, "Data/processed/bear_int_only_loo.rds")
 
+bear.loo.comp <- loo_compare(bloo1, bloo2, bloo3, bloo0)
+saveRDS(bear.loo.comp, "Data/processed/bear_loo_comp.rds")
 
 preds3 <- posterior_epred(bear.no.conf)
 preds2 <- posterior_epred(bear.full.mod.quad)
