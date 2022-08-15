@@ -59,6 +59,9 @@ saveRDS(post.pa.full, "Data/processed/post_pa_full.rds")
 saveRDS(post.pa.full.quad, "Data/processed/post_pa_full_quad.rds")
 saveRDS(post.int.only, "Data/processed/post_int_only.rds")
 
+post.pa.full <- readRDS("Data/processed/post_pa_full.rds")
+post.pa.full.quad <- readRDS("Data/processed/post_pa_full_quad.rds")
+post.int.only <- readRDS("Data/processed/post_int_only.rds")
 
 # Run LOOIC and Posterior Comparisons: ------------------------------------
 loo1 <- loo(post.pa.full, save_psis = TRUE)
@@ -180,12 +183,32 @@ levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 animal.dens.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = animal.farm.dens, y = mean, colour =pop.dens), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=animal.farm.dens, fill = pop.dens), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","Population Density")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "Population Density") +
+  scale_colour_viridis(discrete = "TRUE", option="D","Population Density")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "Population Density") +
   ylab("Probability of Conflict") + 
   xlab(expression("Density of Livestock Operations per"~km^{2}))+
  # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+
+###### Testing other color palette:
+library(RColorBrewer)
+display.brewer.all(colorblindFriendly = TRUE)
+install.packages("wesanderson")
+library(wesanderson)
+ # wes not working
+animal.dens.plot <- ggplot(data=plot.df) +
+  geom_line(aes(x = animal.farm.dens, y = mean, colour =pop.dens), lwd=1.5) +
+  geom_ribbon(aes(ymin=lo, ymax=hi, x=animal.farm.dens, fill = pop.dens), alpha = 0.2) +
+  scale_colour_manual(values = wes_palette("GrandBudapest1", n = 3))+
+  scale_fill_manual( "Population Density") +
+  ylab("Probability of Conflict") + 
+  xlab(expression("Density of Livestock Operations per"~km^{2}))+
+  # guides(fill=guide_legend(title="Population Density"))+
+  theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+
+
+
+
 
 simdata <- pres.abs.scl %>%
   modelr::data_grid(dist.2.pa.ps = mean(dist.2.pa.ps),
