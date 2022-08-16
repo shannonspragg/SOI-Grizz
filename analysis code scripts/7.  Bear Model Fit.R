@@ -67,6 +67,12 @@ saveRDS(bear.int.only, "Data/processed/bear_int_only.rds")
 saveRDS(bear.full.mod, "Data/processed/bear_full.rds")
 saveRDS(bear.no.conf, "Data/processed/bear_no_conf.rds")
 
+# Read back in for future use:
+bear.full.mod.quad <- readRDS("Data/processed/bear_quad_reg.rds")
+bear.int.only <- readRDS("Data/processed/bear_int_only.rds")
+bear.full.mod <- readRDS("Data/processed/bear_full.rds")
+bear.no.conf <- readRDS("Data/processed/bear_no_conf.rds")
+
 # Model Comparison: -------------------------------------------------------
 loo1 <- loo(bear.full.mod, save_psis = TRUE)
 loo2 <- loo(bear.full.mod.quad, save_psis = TRUE)
@@ -193,11 +199,11 @@ plot.df <- postdraws %>%
             hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
-dist2pa.plot <- ggplot(data=plot.df) +
+dist2pa.plot.b <- ggplot(data=plot.df) +
   geom_line(aes(x = dist2pa_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=dist2pa_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab("Distance to Protected Areas (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -233,8 +239,8 @@ levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 dist2grizz.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = dist2grizz_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=dist2grizz_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab("Distance to Extant Grizzly Pops. (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -267,11 +273,11 @@ plot.df <- postdraws %>%
             hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
-livestockOps.plot <- ggplot(data=plot.df) +
+livestockOps.plot.b <- ggplot(data=plot.df) +
   geom_line(aes(x = livestockOps_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=livestockOps_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab(expression("Density of Livestock Operations per"~km^{2}))+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -304,11 +310,11 @@ plot.df <- postdraws %>%
             hi = quantile(.epred, 0.8))
 
 levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
-rowcropOps.plot <- ggplot(data=plot.df) +
+rowcropOps.plot.b <- ggplot(data=plot.df) +
   geom_line(aes(x = rowcropOps_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=rowcropOps_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab(expression("Density of Row-crop Operations per"~km^{2}))+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -344,8 +350,8 @@ levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 connectivity.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = connectivity_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=connectivity_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab("Cumulative Current Flow (Amperes)")+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -381,8 +387,8 @@ levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 grizzinc.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = grizzinc_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=grizzinc_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab("Prop. of People Supporting Grizzly Pop. Increase")+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -418,8 +424,8 @@ levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 habsuit.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = habsuit_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=habsuit_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab("Predicted Grizzly Bear Habitat Suitability")+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -455,16 +461,16 @@ levels(plot.df$conflictprob) <-  c("Lower 10%", "Mean", "Upper 10%")
 humandens.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = humandens_un, y = mean, colour =conflictprob), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=humandens_un, fill = conflictprob), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","General Conflict Prob.")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "General Conflict Prob.") +
+  scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
   xlab("Human Population Density")+
          theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
          
   # Add Plots together:
-biophys.p <-  connectivity.plot + habsuit.plot + dist2pa.plot + dist2grizz.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')         
+biophys.p <-  connectivity.plot + habsuit.plot + dist2pa.plot.b + dist2grizz.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')         
 
-social.p <- grizzinc.plot + humandens.plot + livestockOps.plot + rowcropOps.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
+social.p <- grizzinc.plot + humandens.plot + livestockOps.plot.b + rowcropOps.plot.b + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
 
 saveRDS(biophys.p, "Data/processed/biophys_bear_conf_plots.rds")
 saveRDS(social.p, "Data/processed/social_bear_conf_plots.rds")

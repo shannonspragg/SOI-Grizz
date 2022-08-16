@@ -191,23 +191,18 @@ animal.dens.plot <- ggplot(data=plot.df) +
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
 
 ###### Testing other color palette:
-library(RColorBrewer)
-display.brewer.all(colorblindFriendly = TRUE)
-install.packages("wesanderson")
-library(wesanderson)
- # wes not working
-animal.dens.plot <- ggplot(data=plot.df) +
-  geom_line(aes(x = animal.farm.dens, y = mean, colour =pop.dens), lwd=1.5) +
-  geom_ribbon(aes(ymin=lo, ymax=hi, x=animal.farm.dens, fill = pop.dens), alpha = 0.2) +
-  scale_colour_manual(values = wes_palette("GrandBudapest1", n = 3))+
-  scale_fill_manual( "Population Density") +
-  ylab("Probability of Conflict") + 
-  xlab(expression("Density of Livestock Operations per"~km^{2}))+
-  # guides(fill=guide_legend(title="Population Density"))+
-  theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
-
-
-
+# library(RColorBrewer)
+# display.brewer.all(colorblindFriendly = TRUE)
+# 
+# animal.dens.plot <- ggplot(data=plot.df) +
+#   geom_line(aes(x = animal.farm.dens, y = mean, colour =pop.dens), lwd=1.5) +
+#   geom_ribbon(aes(ymin=lo, ymax=hi, x=animal.farm.dens, fill = pop.dens), alpha = 0.2) +
+#   discrete_scale(scale_name, palette="Dark2", "Population Density")+
+#   discrete_scale(scale_name, palette="Dark2", "Population Density") +
+#   ylab("Probability of Conflict") + 
+#   xlab(expression("Density of Livestock Operations per"~km^{2}))+
+#   # guides(fill=guide_legend(title="Population Density"))+
+#   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
 
 
 simdata <- pres.abs.scl %>%
@@ -236,8 +231,8 @@ levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 ground.dens.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = ground.crop.dens, y = mean, colour =pop.dens), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=ground.crop.dens, fill = pop.dens), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","Population Density")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "Population Density") +
+  scale_colour_viridis(discrete = "TRUE", option="D","Population Density")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "Population Density") +
   ylab("Probability of Conflict") + 
   xlab(expression("Density of Row-Crop Operations per"~km^{2}))+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -270,8 +265,8 @@ levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 dist.2met.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = dist.2.met, y = mean, colour =pop.dens), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=dist.2.met, fill = pop.dens), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","Population Density")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "Population Density") +
+  scale_colour_viridis(discrete = "TRUE", option="D","Population Density")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "Population Density") +
   ylab("Probability of Conflict") + 
   xlab("Distance to Metro Areas (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
@@ -303,8 +298,8 @@ levels(plot.df$pop.dens) <-  c("Lower 10%", "Mean", "Upper 10%")
 dist.2pa.plot <- ggplot(data=plot.df) +
   geom_line(aes(x = dist.2.pa, y = mean, colour =pop.dens), lwd=1.5) +
   geom_ribbon(aes(ymin=lo, ymax=hi, x=dist.2.pa, fill = pop.dens), alpha = 0.2) +
-  scale_colour_viridis(discrete = "TRUE", option="F","Population Density")+
-  scale_fill_viridis(discrete = "TRUE", option="F", "Population Density") +
+  scale_colour_viridis(discrete = "TRUE", option="D","Population Density")+
+  scale_fill_viridis(discrete = "TRUE", option="D", "Population Density") +
   ylab("Probability of Conflict") + 
   xlab("Distance to Protected Area (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
