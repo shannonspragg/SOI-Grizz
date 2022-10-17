@@ -84,6 +84,12 @@ saveRDS(loo2, "Data/processed/bear_full_quad_loo.rds")
 saveRDS(loo3, "Data/processed/bear_no_conf_loo.rds")
 saveRDS(loo0, "Data/processed/bear_int_only_loo.rds")
 
+# Bring back in later:
+loo1 <- readRDS("Data/processed/bear_full_loo.rds")
+loo2 <- readRDS("Data/processed/bear_full_quad_loo.rds")
+loo3 <- readRDS("Data/processed/bear_no_conf_loo.rds")
+loo0 <- readRDS("Data/processed/bear_int_only_loo.rds")
+
 bear.loo.comp <- loo_compare(bloo1, bloo2, bloo3, bloo0)
 saveRDS(bear.loo.comp, "Data/processed/bear_loo_comp.rds")
 
