@@ -4,7 +4,7 @@ Below are descriptions of each analysis code script and how to reproduce the ful
 The data for all of the following scripts can be found at this googledrive link: 
 https://drive.google.com/drive/u/0/folders/1QZzhx2AslFhu-giG_MNcDO1qmbJpoWwR
 
-The below scripts include the process we followed for collecting and cleaning our data, building a "master data frame", and running our data through both Bayesian logistic regressions. The order of the scripts that reproduce our analysis is as follows:
+The below scripts include the process we followed for collecting and cleaning our data, building a conflict data frame, and running our data through both Bayesian logistic regressions. The order of the scripts (located in the analysis code scripts folder) that reproduce our analysis is as follows:
 
 ## 0. Download Original Data.R 
 This script downloads all of our original data files from the public google drive.
