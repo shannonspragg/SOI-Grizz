@@ -109,7 +109,6 @@ head(dist.pts2pas.warp)
 dist.pts2pas.presabs <- terra::distance(vect(pres.abs.reproj), vect(bc.PAs.reproj))
 head(dist.pts2pas.presabs)
 
-
   # Must find the minimum distance to PA's (Distance from conflict point to nearest PA)
 min.dist.warp <- apply(dist.pts2pas.warp, 1, min)
 str(min.dist.warp)
@@ -149,10 +148,7 @@ head(bears.reproj)
 
 pres.abs.reproj$dist_to_Metro<-(min.dist.met.presabs/1000)
 head(pres.abs.reproj)
-
-
 # This added the dist to metro areas column to our data
-
 
   # Check for NA's quick:
 which(is.na(bears.reproj$dist_to_PA))
@@ -160,7 +156,6 @@ which(is.na(bears.reproj$dist_to_Metro))
 
 which(is.na(pres.abs.reproj$dist_to_PA))
 which(is.na(pres.abs.reproj$dist_to_Metro))
-
 
 ############################# Prepare Distance to Extent Bear Populations Variable: -------------------
 
@@ -186,8 +181,6 @@ head(bears.reproj)
 
 pres.abs.reproj$dist_to_GrizzPop<-(min.dist.grizz.presabs/1000)
 head(pres.abs.reproj)
-
-
 # This added the dist to grizzly populations column to our data
 
   # Check for NA:
@@ -209,27 +202,11 @@ ground.crop.crop <- crop(ground.crop.sv, bear.sa)
 animal.prod.rast <- terra::rasterize(animal.prod.crop, bear.sa, field = "Frms___")
 ground.crop.rast <- terra::rasterize(ground.crop.crop, bear.sa, field = "Frms___")
 
-# Fix the column names:
-
-#names(animal.prod.rast)[names(animal.prod.rast) == "Frms___"] <- "Density of Animal Product & Meat Farming / sq km"
-#names(ground.crop.rast)[names(ground.crop.rast) == "Frms___"] <- "Density of Ground Crop & Produce Farming / sq km"
-
   # Save these Farm Rasters:
 terra::writeRaster(animal.prod.rast, "Data/processed/animal_production_density_raster.tif", overwrite=TRUE)
 terra::writeRaster(ground.crop.rast, "Data/processed/ground_crop_density_raster.tif" , overwrite=TRUE)
 
-# Adjust values:
-#animal.prod.rast[animal.prod.rast > 1.5] <- 2
-#ground.crop.rast[ground.crop.rast > 1.5] <- 2
-
-#animal.prod.adjusted <- animal.prod.rast
-#ground.crop.adjusted <- ground.crop.rast
-
-#terra::writeRaster(animal.prod.adjusted, "Data/processed/animal_production_density_adjusted.tif")
-#terra::writeRaster(ground.crop.adjusted, "Data/processed/ground_crop_density_adjusted.tif" )
-
 farm.density.combined <- animal.prod.rast + ground.crop.rast
-#farm.density.combined[farm.density.combined > 1] <- 1
 
 terra::writeRaster(farm.density.combined, "Data/processed/combined_farm_density.tif" , overwrite=TRUE)
 
@@ -294,10 +271,7 @@ which(is.na(pres.abs.dropped$Ground_Crops)) # Same
   # Update data frame:
 pres.abs.reproj <- pres.abs.dropped
 
-
 ############################ Next, Add in the CCS Region Names to the Data:
-
-
 # Project the CCS Regions to match our data: ------------------------------
 bc.ccs.reproj <- st_transform(bc.ccs, st_crs(soi.bound.reproj))
 
@@ -365,9 +339,7 @@ which(is.na(pres.abs.dropped$CCSUID)) # Same
 # Update data frame:
 pres.abs.ccs.join <- pres.abs.dropped
 
-
 # WARP All Species Master Data Frame --------------------------------------
   # Save the resulting data frames here:
 st_write(warp.ccs.join, "Data/processed/warp.master.shp", append = FALSE)
 st_write(pres.abs.ccs.join, "Data/processed/pres.abs.master.shp", append=FALSE)
-

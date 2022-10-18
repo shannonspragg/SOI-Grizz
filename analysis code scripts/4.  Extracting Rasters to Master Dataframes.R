@@ -27,7 +27,6 @@ biophys.cum.curmap <- rast("Data/original/cum_currmap.tif") # use this one
 
   # Just survey response layer (not CS):
 grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
-
   # responded “I would like to see grizzlies increase or increase substantially” in response to “how would you like to see grizzly 
   # populations respond in the next several years?” 
 
@@ -42,7 +41,6 @@ soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
  # Human Density for SOI:
 hm.dens <- terra::rast("Data/processed/human_dens_crop.tif") # SOI Region 10km
 
-
 # Check / Set CRS for Raster and Points -----------------------------------
   # Match the projection and CRS of the current map to the resistance maps:
 #only hm.dens and griz increas rast are in the wrong projection
@@ -55,47 +53,6 @@ griz.inc.crop <- terra::crop(grizz.inc.rast, terra::project(vect(soi.10k.boundar
 griz.inc.crop <- terra::mask(griz.inc.crop, vect(soi.10k.boundary))
 griz.inc.proj <- terra::project(griz.inc.crop, grizz.dens.crop)
 
-# GrizzInc Map:
-#grizz.inc.reproj <- terra::project(grizz.inc.rast, crs(soi.rast))
-#crs(grizz.inc.reproj) == crs(soi.rast) 
-  # Bear Density (BHS) Estimate:
-#grizz.dens.reproj <- terra::project(grizz.dens, crs(soi.rast))
-#crs(grizz.dens) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
-  # Biophys Map:
-#biophys.reproj <- terra::project(biophys.cum.curmap, crs(soi.rast))
-#crs(biophys.cum.curmap) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
-# Nice, this worked --> now in BC Albers EPSG 3005
-  # Human Density:
-
-#hm.dens.reproj <- terra::project(hm.dens, crs(soi.rast))
-#crs(hm.dens.soi) == crs(soi.rast) # Nice, this worked --> now in BC Albers EPSG 3005
-
-
-  # Project SOI boundary:
-#soi.reproj <- st_make_valid(soi.10k.boundary) %>% 
-#  st_transform(crs=crs(soi.rast))
-
-#st_crs(warp.all.sp) # This is in NAD83 BC Albers - EPSG 3005
-
-  # Match the sf points CRS directly to the template raster:
-#warp.reproj <- st_make_valid(warp.all.sp) %>% 
-#  st_transform(crs=crs(soi.rast))
-
-#pres.abs.reproj <- st_make_valid(pres.abs.master) %>% 
-#  st_transform(crs=crs(soi.rast))
-#st_crs(pres.abs.reproj)
-#st_crs(warp.reproj)
-#crs(soi.rast) # The same as above, just formatted differently - success!
-
-  # Check Raster Resolutions:
-
-#res(grizz.dens) # 1000 x 1000
-#res(biophys.cum.curmap) # 1000 x 1000
-#res(grizz.inc.rast) # 270 x 270
-#res(soi.rast) # 271 x 271
-#res(hm.dens.soi) # 271 x 271
-
-
 # Buffer the WARP Points (Before Overlay) --------------------------------------------------
 # Here we buffer the WARP and ppres-abs points by 5km before extracting the attributes from the current maps
 warp.all.buf <- warp.all.sp %>% 
@@ -106,13 +63,9 @@ pres.abs.buf <- pres.abs.master %>%
   st_buffer(., 5000)
 plot(st_geometry(pres.abs.buf)) # Check the buffers
 
-
 # Let's Turn the Buffered Points into a SpatVector:
 warp.sv.buf <- vect(warp.all.buf)
 pres.abs.sv.buf <- vect(pres.abs.buf)
-
-#soi.sv <- vect(soi.bound.reproj)
-
 
 # Plot them together to see if projection truly is same:
 plot(griz.inc.proj)
@@ -127,29 +80,6 @@ plot(warp.sv.buf, add = TRUE)
 plot(hm.dens.proj)
 plot(pres.abs.sv.buf, add = TRUE) 
 
-
-# Crop these Rasters:
-#grizzinc.crop <- terra::crop(grizz.inc.reproj, soi.rast)  
-#biophys.crop <- terra::crop(biophys.reproj, soi.rast)
-#bhs.crop <- terra::crop(grizz.dens.reproj, soi.rast)
-
-
-#plot(grizzinc.crop)
-#plot(biophys.crop)
-#plot(bhs.crop)
-
-# Resample to match extents and res ( we want to match to the grizzinc res):
-
-#biophys.rsmple <- resample(biophys.crop, soi.rast, method='bilinear')
-#bhs.rsmple <- resample(bhs.crop, soi.rast, method='bilinear')
-#hm.dens.rsmple <- resample(hm.dens.reproj, soi.rast, method='bilinear')
-#grizzinc.rsmple <- resample(grizzinc.crop, soi.rast, method='bilinear')
-
-
-#plot(biophys.rsmple)
-#plot(bhs.rsmple)
-#plot(hm.dens.rsmple)
-#plot(grizzinc.rsmple)
 
 # Overlay WARP Points with CS Raster  --------------------------------------
 # Here we extract the mean values from each raster to the buffered points

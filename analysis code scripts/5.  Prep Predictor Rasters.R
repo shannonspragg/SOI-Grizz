@@ -8,34 +8,11 @@ library(terra)
 
 # Load Data: --------------------------------------------------------------
 
-  # Grizzinc:  UPDATE THIS WITH NEW DATA
-#grizzinc.rast <- terra::rast("Data/original/grizz.increase.map.fixed.tif") 
-
   # Bear Density - Bear Habitat Suitability (BHS)
 bhs.rast <- rast("Data/processed/bhs_SOI_10km.tif")
 
-  # Biophysical Current Map (Cumulative current flow shows the total current for each landscape pixel):
-#biophys.rast <- rast("Data/original/cum_currmap.tif") 
-
   # SOI Region for plotting:
 soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
-#soi.rast <- rast("Data/processed/SOI_10km.tif")
-  
-  # PA and Metro Data: (need to be cropped)
-# fgdb <- "Data/original/CPCAD-BDCAPC_Dec2020.gdb"
-# fc <- readOGR(dsn=fgdb,layer="CPCAD_Dec2020")
-# fc.sf <- as(fc, "sf")
-# bc.PAs <- fc.sf %>% 
-#   filter(., LOC_E == "British Columbia") 
-# 
-# # Filter by IUCN status (Muise et al., 2022 https://esajournals.onlinelibrary.wiley.com/doi/10.1002/eap.2603)
-# bc.PAs.iucn.filtered <- bc.PAs %>% 
-#   filter(., IUCN_CAT == "Ia" | IUCN_CAT == "Ib" | IUCN_CAT == "II" | IUCN_CAT == "IV") %>% 
-#   st_make_valid()
-# bc.PAs.iucn.filtered$areaha <- st_area(bc.PAs.iucn.filtered) 
-# units(bc.PAs.iucn.filtered$areaha) <- units::make_units(ha)
-# bc.PAs.iucn.filtered$areaha <- as.numeric(bc.PAs.iucn.filtered$areaha) 
-# # Filter by PA's larger than 100 ha:
 
 bc.PAs <- st_read("Data/processed/bc_PAs.shp")
 bc.metro<-st_read("Data/original/CNCNSSMTRR_polygon.shp")
@@ -43,9 +20,6 @@ bc.metro<-st_read("Data/original/CNCNSSMTRR_polygon.shp")
   # Extant Grizzly Populations:
 extant.grizz <- st_read("Data/processed/Extant Grizzly Pop Units.shp")
  
-  # Human Density for SOI:
-#hm.dens <- terra::rast("Data/processed/human_dens.tif") # SOI Region 10km
-
   # Farm Rasters:
 animal.prod.rast <- terra::rast("Data/processed/animal_production_density_raster.tif")
 ground.crop.rast <- terra::rast("Data/processed/ground_crop_density_raster.tif" )
@@ -66,7 +40,6 @@ grizz.pop.reproj <- st_make_valid(extant.grizz) %>%
 st_crs(soi.10k.boundary) == st_crs(bc.PAs.reproj) # [TRUE] 
 st_crs(metro.reproj) == st_crs(soi.10k.boundary) # [TRUE]
 st_crs(grizz.pop.reproj) == st_crs(soi.10k.boundary) # [TRUE]
-
 
 # Rasterize our Points & Polygons: ----------------------------------------
 

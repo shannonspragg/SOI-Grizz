@@ -155,16 +155,6 @@ unique(farm.type.bc$North.American.Industry.Classification.System..NAICS.) # The
 bc.farm.2016.ccs<-bc.farm.filter.ccs %>%
   filter(., REF_DATE == "2016") 
 
-# Editing CCS Code into new column for join -------------------------------
-  # Here we separate out the CCS code into new column for join with CCS .shp:
-#bc.ccs$CCSUID.crop<- str_sub(bc.ccs$CCSUID,-5,-1) # Now we have a matching 6 digits
-#unique(bc.ccs$CCSUID.crop) #This is a 5 digit code
-#str(bc.farm.2016.ccs) # Check the structure before joining
-
-#bc.farm.2016.ccs$CCSUID.crop<- str_sub(bc.farm.2016.ccs$GEO,-6,-2) # Now we have a matching 6 digits
-#unique(bc.farm.2016.ccs$CCSUID.crop) #This is a 5 digit code
-#str(bc.farm.2016.ccs) # Check the structure before joining
-
 # Joining the CCS with the Farm Type: -------------------------------------
   # Join the BC CCS with Ag Files:
 #farm.ccs.join <- merge(bc.farm.2016.ccs, bc.ccs, by.x = "CCSUID.crop", by.y = "CCSUID.crop") 
@@ -175,25 +165,10 @@ bc.farm.2016.ccs$geoid <- str_sub(bc.farm.2016.ccs$DGUID, -7, -1)
 farm.ccs.join <- bc.ccs %>% 
   left_join(., bc.farm.2016.ccs, by = c("CCSUID" = "geoid"))
 
-
-
-
-#MW: don't do this st_as_sf because the above produces an sf object and st_as_sf has some potential consequences when you have both coordinate columns and geometry columns; also the code below doesn't return and sf object
-  # Double check that this is the correct structure:
-#farm.ccs.sfb <- st_as_sf(farm.ccs.join)
-#head(farm.ccs.sf) # Here we have a farm type data frame with Multi-polygon geometry - check!
-
-
-######################## Here, we calculate the denisty of farms in the region:
-
 # Here we subset the farm data to SOI, and pull out the total farm counts: ---------------------------------
 
   # Start by cropping the data down to SOI buffer:
 farm.ccs.sf <- st_transform(farm.ccs.join, st_crs(south.int.10k.buf))
-#MW: This actually clips the CCS so the areas get reduced need to keep the area to get the densities correct.
-
-#farm.ccs.soi <- st_intersection(farm.ccs.sf, south.int.10k.buf) 
-#MW: This ensures we keep the entire geometry for calculating the density
 farm.ccs.soi <- farm.ccs.sf[st_intersects(south.int.10k.buf, farm.ccs.sf, sparse =  FALSE),]
 
   # Subset the data - separate total farms out of NAIC:
@@ -208,24 +183,12 @@ ground.crop.production <- dplyr::filter(farm.soi.subset, N_A_I_C == "Fruit and t
                                         | N_A_I_C == "Oilseed and grain farming [1111]" | N_A_I_C == "Other crop farming [1119]")
 
   # Total the counts of these farm categories by CCS region:
-#animal.prod.counts <- aggregate(cbind(VALUE) ~ CCSUID, data= animal.product.farming, FUN=sum)
-#ground.crop.counts <- aggregate(cbind(VALUE) ~ CCSUID, data= ground.crop.production, FUN=sum)
-##MW: Using the group_by; summarize avoids having to rejoin data
 animal.prod.sf <- animal.product.farming %>% 
   group_by(CCSUID) %>% 
   summarise(., "Total Farms in CCS" = sum(VALUE))
 ground.crop.sf <- ground.crop.production %>% 
   group_by(CCSUID) %>% 
   summarise(., "Total Farms in CCS" = sum(VALUE))
-#names(animal.prod.counts)[names(animal.prod.counts) == "VALUE"] <- "Total Farms in CCS"
-#names(ground.crop.counts)[names(ground.crop.counts) == "VALUE"] <- "Total Farms in CCS"
-
-  # Join this back to our data as a total column:
-#animal.prod.join <- merge(animal.prod.counts, animal.product.farming, by.x = "CCSUID", by.y = "CCSUID") 
-#ground.crop.join <- merge(ground.crop.counts, ground.crop.production, by.x = "CCSUID", by.y = "CCSUID") 
-
-#animal.prod.sf <- st_as_sf(animal.prod.join)
-#ground.crop.sf <- st_as_sf(ground.crop.join)
 
 
 # Calculate the Density of Farm Types: ------------------------------------
@@ -284,30 +247,10 @@ plot(st_geometry(south.int.10k.buf), add=TRUE)
 st_write(extant.grizz, "Data/processed/Extant Grizzly Pop Units.shp") 
 
 
-
 ################################# Prep Human Density Predictor:
-
-# Reproject the Data: --------------------------------------------------
-##MW: I am not reprojecting the data here as that doesn't seem necessary yet and it's not clear what the new resolution should be
 soi.buf.vect <- vect(south.int.10k.buf)
 soi.buf.reproj <- project(soi.buf.vect, world.hum.dens)
 world.dens.crop <- crop(world.hum.dens, soi.buf.reproj)
-
-#world.dens.reproj <- terra::project(world.hum.dens, crs(soi.rast))
-#plot(world.dens.reproj)
-
-#crs(world.dens.reproj) == crs(soi.rast) #TRUE
-
-#soi.reproj <- st_make_valid(south.int.10k.buf) %>%  # reproject the vector data first to match hum density, then crop using soi.vect, then reproject smaller hum dens raster to match soi rast, then resample
-#  st_transform(crs=crs(soi.rast))
-
-
-# Crop and match the Human Density Data to SOI: -------------------------------------
-  # Crop to SOI region:
-#hum.dens.crop <- terra::crop(world.dens.reproj, soi.rast)
-  # Resample to match template raster:
-#hm.dens.rsmple <- resample(hum.dens.crop, soi.rast, method='bilinear')
-
 
 # Save Raster as .tif for later: ----------------------------------------------------
 terra::writeRaster(world.dens.crop, "Data/processed/human_dens_crop.tif")
