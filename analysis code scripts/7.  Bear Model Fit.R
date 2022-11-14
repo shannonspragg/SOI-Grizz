@@ -90,7 +90,7 @@ loo2 <- readRDS("Data/processed/bear_full_quad_loo.rds")
 loo3 <- readRDS("Data/processed/bear_no_conf_loo.rds")
 loo0 <- readRDS("Data/processed/bear_int_only_loo.rds")
 
-bear.loo.comp <- loo_compare(bloo1, bloo2, bloo3, bloo0)
+bear.loo.comp <- loo_compare(loo1, loo2, loo3, loo0)
 saveRDS(bear.loo.comp, "Data/processed/bear_loo_comp.rds")
 
 preds3 <- posterior_epred(bear.no.conf)
@@ -106,9 +106,9 @@ pr2 <- as.integer(pred2 >= 0.5)
 pr1 <- as.integer(pred1 >= 0.5)
 pr0 <- as.integer(pred0 >=0.5)
 
-round(mean(xor(pr3,as.integer(bear.conflict.df.scl$conflict==0))),2) #.68 
-round(mean(xor(pr2,as.integer(bear.conflict.df.scl$conflict==0))),2) #.68
-round(mean(xor(pr1,as.integer(bear.conflict.df.scl$conflict==0))),2) #0.68
+round(mean(xor(pr3,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67 
+round(mean(xor(pr2,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
+round(mean(xor(pr1,as.integer(bear.conflict.df.scl$conflict==0))),2) #0.67
 round(mean(xor(pr0,as.integer(bear.conflict.df.scl$conflict==0))),2) #0.68
 
 ploo1 <- E_loo(preds1, loo1$psis_object, type="mean", log_ratios = -log_lik(bear.full.mod))$value
@@ -119,9 +119,9 @@ ploo3<-E_loo(preds3, loo3$psis_object, type="mean", log_ratios = -log_lik(bear.n
 
 ploo0<-E_loo(preds0, loo0$psis_object, type="mean", log_ratios = -log_lik(bear.int.only))$value
 
-round(mean(xor(ploo1>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
+round(mean(xor(ploo1>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.66
 round(mean(xor(ploo2>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
-round(mean(xor(ploo3>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
+round(mean(xor(ploo3>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.66
 round(mean(xor(ploo0>0.5,as.integer(bear.conflict.df.scl$conflict==0))),2) #.67
 
 # Building plots of results -----------------------------------------------
@@ -132,10 +132,13 @@ par(pty = "s")
 pROC::roc(bear.conflict.df.scl$conflict, bear.full.mod.quad$fitted.values, plot=TRUE, legacy.axes=TRUE, percent=TRUE , 
           xlab= "False Positive Percentage", ylab= "True Positive Percentage",
           col="#377eb8", lwd=4, print.auc=TRUE)
-pROC::plot.roc(bear.conflict.df.scl$conflict, bear.full.mod.quad$fitted.values, percent=TRUE, col='#4daf4a', lwd=4, print.auc=TRUE, add=TRUE, print.auc.y=60)
+pROC::plot.roc(bear.conflict.df.scl$conflict, bear.full.mod$fitted.values, percent=TRUE, col='#4daf4a', lwd=4, print.auc=TRUE, add=TRUE, print.auc.y=45)
 
-legend("bottomright", legend=c("Full Model", "Varying Intercept Model"),
-       col=c("#377eb8", "#4daf4a"), lwd = 4)
+pROC::plot.roc(bear.conflict.df.scl$conflict, bear.no.conf$fitted.values, percent=TRUE, col='#B090D0', lwd=4, print.auc=TRUE, add=TRUE, print.auc.y=40)
+pROC::plot.roc(bear.conflict.df.scl$conflict, bear.int.only$fitted.values, percent=TRUE, col='#FFAA00', lwd=4, print.auc=TRUE, add=TRUE, print.auc.y=35)
+
+legend("bottomright", legend=c("Quad Model","Full Model",  "No Conflict Model", "Varying Intercept-only Model"),
+       col=c("#377eb8","#4daf4a", "#B090D0", "#FFAA00"), lwd = 4)
 par(opar)
 
 # We will use full model without quadratic term as their predictive accuracy is similar and the predictor estimates seem more stable
@@ -148,6 +151,7 @@ library(see)
 library(insight)
 library(ggplot2)
 
+bear.quad.result <- p_direction(bear.full.mod.quad)
 bear.quad.preds.plot <- plot(bear.quad.result, title = "Predictor Effects for Bear Conflict")
 bear.quad.preds.plot
 # this is the max probability of effect (MPE), showing the probability of a predictor having a positive or negative effect
@@ -214,7 +218,9 @@ dist2pa.plot.b <- ggplot(data=plot.df) +
   xlab("Distance to Protected Areas (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+saveRDS(dist2pa.plot.b, "Data/processed/dist2pa_plot_bearmod.rds")
 
+# Plot Dist to GrizzPop:
 simdata <- bear.conflict.df.scl %>%
   modelr::data_grid(dist2pa = mean(dist2pa),
                     dist2grizz = seq_range(dist2grizz, n=300),
@@ -233,7 +239,6 @@ postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad,
 
 postdraws$dist2grizz_un <- (postdraws$dist2grizz * attributes(bear.conflict.df.scl$dist2grizz)[[3]])+attributes(bear.conflict.df.scl$dist2grizz)[[2]]
 
-  # Plot Dist to GrizzPop:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(dist2grizz_un, conflictprob) %>% 
@@ -251,7 +256,10 @@ dist2grizz.plot <- ggplot(data=plot.df) +
   xlab("Distance to Extant Grizzly Pops. (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+saveRDS(dist2grizz.plot, "Data/processed/dist2grizz_plot_bearmod.rds")
 
+
+# Plot LIvestock dens:
 simdata <- bear.conflict.df.scl %>%
   modelr::data_grid(dist2pa = mean(dist2pa),
                     dist2grizz = mean(dist2grizz),
@@ -270,7 +278,6 @@ postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad,
 
 postdraws$livestockOps_un <- (postdraws$livestockOps * attributes(bear.conflict.df.scl$livestockOps)[[3]])+attributes(bear.conflict.df.scl$livestockOps)[[2]]
 
-  # Plot Livestock Dens:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(livestockOps_un, conflictprob) %>% 
@@ -288,7 +295,9 @@ livestockOps.plot.b <- ggplot(data=plot.df) +
   xlab(expression("Density of Livestock Operations per"~km^{2}))+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+saveRDS(livestockOps.plot.b, "Data/processed/livestock_plot_bearmod.rds")
 
+# Plot row crop dens:
 simdata <- bear.conflict.df.scl %>%
   modelr::data_grid(dist2pa = mean(dist2pa),
                     dist2grizz = mean(dist2grizz),
@@ -307,7 +316,6 @@ postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad,
 
 postdraws$rowcropOps_un <- (postdraws$rowcropOps * attributes(bear.conflict.df.scl$rowcropOps)[[3]])+attributes(bear.conflict.df.scl$rowcropOps)[[2]]
 
-  # Plot Row Crop Dens:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(rowcropOps_un, conflictprob) %>% 
@@ -325,7 +333,9 @@ rowcropOps.plot.b <- ggplot(data=plot.df) +
   xlab(expression("Density of Row-crop Operations per"~km^{2}))+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+saveRDS(rowcropOps.plot.b, "Data/processed/rowcrops_plot_bearmod.rds")
 
+# Plot biophys cum current:
 simdata <- bear.conflict.df.scl %>%
   modelr::data_grid(dist2pa = mean(dist2pa),
                     dist2grizz = mean(dist2grizz),
@@ -344,7 +354,6 @@ postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad,
 
 postdraws$connectivity_un <- (postdraws$connectivity * attributes(bear.conflict.df.scl$connectivity)[[3]])+attributes(bear.conflict.df.scl$connectivity)[[2]]
 
-  # Plot Biophys Current:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(connectivity_un, conflictprob) %>% 
@@ -362,7 +371,9 @@ connectivity.plot <- ggplot(data=plot.df) +
   xlab("Cumulative Current Flow (Amperes)")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+saveRDS(connectivity.plot, "Data/processed/connectivity_plot_bearmod.rds")
 
+# Plot Grizzinc:
 simdata <- bear.conflict.df.scl %>%
   modelr::data_grid(dist2pa = mean(dist2pa),
                     dist2grizz = mean(dist2grizz),
@@ -381,7 +392,6 @@ postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad,
 
 postdraws$grizzinc_un <- (postdraws$grizzinc * attributes(bear.conflict.df.scl$grizzinc)[[3]]) + attributes(bear.conflict.df.scl$grizzinc)[[2]]
 
-  # Plot GrizzInc:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(grizzinc_un, conflictprob) %>% 
@@ -399,7 +409,9 @@ grizzinc.plot <- ggplot(data=plot.df) +
   xlab("Prop. of People Supporting Grizzly Pop. Increase")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+saveRDS(grizzinc.plot, "Data/processed/grizzinc_plot_bearmod.rds")
 
+# Plot BHS:
 simdata <- bear.conflict.df.scl %>%
   modelr::data_grid(dist2pa = mean(dist2pa),
                     dist2grizz = mean(dist2grizz),
@@ -418,7 +430,6 @@ postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad,
 
 postdraws$habsuit_un <- (postdraws$habsuit * attributes(bear.conflict.df.scl$habsuit)[[3]])+attributes(bear.conflict.df.scl$habsuit)[[2]]
 
-  #Plot BHS:
 plot.df <- postdraws %>% 
   mutate_at(., vars(conflictprob), as.factor) %>% 
   group_by(habsuit_un, conflictprob) %>% 
@@ -436,7 +447,9 @@ habsuit.plot <- ggplot(data=plot.df) +
   xlab("Predicted Grizzly Bear Habitat Suitability")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+saveRDS(habsuit.plot, "Data/processed/dhabsuit_plot_bearmod.rds")
 
+# Plot pop dens:
   simdata <- bear.conflict.df.scl %>%
     modelr::data_grid(dist2pa = mean(dist2pa),
                       dist2grizz = mean(dist2grizz),
@@ -455,7 +468,6 @@ postdraws <- tidybayes::add_epred_draws(bear.full.mod.quad,
   
 postdraws$humandens_un <- (postdraws$humandens * attributes(bear.conflict.df.scl$humandens)[[3]])+attributes(bear.conflict.df.scl$humandens)[[2]]
   
-  # Plot Pop Dens:
 plot.df <- postdraws %>% 
     mutate_at(., vars(conflictprob), as.factor) %>% 
     group_by(humandens_un, conflictprob) %>% 
@@ -472,14 +484,18 @@ humandens.plot <- ggplot(data=plot.df) +
   ylab("Probability of Bear Conflict") + 
   xlab("Human Population Density")+
          theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
-         
+saveRDS(humandens.plot, "Data/processed/humandens_plot_bearmod.rds")
+
   # Add Plots together:
 biophys.p <-  connectivity.plot + habsuit.plot + dist2pa.plot.b + dist2grizz.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')         
 
 social.p <- grizzinc.plot + humandens.plot + livestockOps.plot.b + rowcropOps.plot.b + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
 
+plot.all <- connectivity.plot + habsuit.plot + dist2pa.plot.b + dist2grizz.plot + grizzinc.plot + humandens.plot + livestockOps.plot.b + rowcropOps.plot.b + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
+
 saveRDS(biophys.p, "Data/processed/biophys_bear_conf_plots.rds")
 saveRDS(social.p, "Data/processed/social_bear_conf_plots.rds")
+saveRDS(plot.all, "Data/processed/bear_conf_plots.rds")
 
 # generate spatial pred ---------------------------------------------------
 fixed.effects <- fixef(bear.full.mod.quad)
@@ -506,8 +522,8 @@ pop.d.crop <- crop(pop.dens, animal.dens)
 pop.dens <- mask(pop.d.crop, animal.dens)
 bhs <- crop(bhs, animal.dens)
 grizinc <- crop(grizinc, animal.dens)
-writeRaster(bhs, "Data/processed/bhs_SOI_10km.tif", overwrite=TRUE)
-writeRaster(grizinc, "Data/processed/grizinc_SOI_10km.tif")
+writeRaster(bhs, "Data/processed/habsuit_SOI_10km.tif", overwrite=TRUE)
+writeRaster(grizinc, "Data/processed/grizinc_SOI_10km.tif", overwrite=TRUE)
 
 #Create global intercept raster
 global.int <- dist.2.pa
