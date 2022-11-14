@@ -326,9 +326,9 @@ which(is.na(pres.abs.ccs.join$CCSUID)) # same as above
 
   # Plot to see if these are outside the soi boundary too:
 plot(st_geometry(soi.ccs.crop))
-plot(st_geometry(pres.abs.ccs.join[5659,]), col = "red", add=TRUE)
-plot(st_geometry(pres.abs.reproj[10851,]), col = "red", add=TRUE)
-plot(st_geometry(pres.abs.reproj[13771,]), col = "red", add=TRUE) # All of these are just outside our southern border
+plot(st_geometry(pres.abs.ccs.join[5607,]), col = "red", add=TRUE)
+plot(st_geometry(pres.abs.reproj[11636,]), col = "red", add=TRUE)
+plot(st_geometry(pres.abs.reproj[13782,]), col = "red", add=TRUE) # All of these are just outside our southern border
 
   # Drop these NA records:
 pres.abs.dropped <- pres.abs.ccs.join %>% drop_na(CCSNAME) %>% drop_na(CCSUID)

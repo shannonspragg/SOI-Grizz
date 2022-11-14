@@ -14,7 +14,7 @@ warp.all <-st_read("Data/processed/warp_crop_10km_buf.shp")
 # Create a template raster ------------------------------------------------
 
 grizz.dens <- rast("Data/original/grizz_dens.tif")
-soi.vect <- project(vect(soi.10k.buf), crs(grizz.dens))
+soi.vect <- terra::project(vect(soi.10k.buf), crs(grizz.dens))
 grizz.crop <- terra::crop(grizz.dens, soi.vect)
 grizz.crop <- terra::mask(grizz.crop, soi.vect)
 

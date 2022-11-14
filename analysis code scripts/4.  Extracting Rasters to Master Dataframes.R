@@ -45,12 +45,12 @@ hm.dens <- terra::rast("Data/processed/human_dens_crop.tif") # SOI Region 10km
   # Match the projection and CRS of the current map to the resistance maps:
 #only hm.dens and griz increas rast are in the wrong projection
 grizz.dens.crop <- terra::crop(grizz.dens, vect(soi.10k.boundary))
-grizz.dens.crop <- mask(grizz.dens, vect(soi.10k.boundary))
+#grizz.dens.crop <- mask(grizz.dens, vect(soi.10k.boundary))
 biophys.curmap.crop <- terra::crop(biophys.cum.curmap, vect(soi.10k.boundary))
-biophys.curmap.crop <- terra::mask(biophys.curmap.crop, vect(soi.10k.boundary))
+#biophys.curmap.crop <- terra::mask(biophys.curmap.crop, vect(soi.10k.boundary))
 hm.dens.proj <- terra::project(hm.dens, grizz.dens.crop)
 griz.inc.crop <- terra::crop(grizz.inc.rast, terra::project(vect(soi.10k.boundary), grizz.inc.rast))
-griz.inc.crop <- terra::mask(griz.inc.crop, vect(soi.10k.boundary))
+#griz.inc.crop <- terra::mask(griz.inc.crop, vect(soi.10k.boundary))
 griz.inc.proj <- terra::project(griz.inc.crop, grizz.dens.crop)
 
 # Buffer the WARP Points (Before Overlay) --------------------------------------------------
@@ -122,8 +122,17 @@ st_write(warp.all.sp, "Data/processed/warp_final.shp", append = FALSE)
 st_write(pres.abs.master, "Data/processed/pres_abs_final.shp", append=FALSE)
 
 # Save projected cropped rasters ------------------------------------------
+grizz.dens.soi <- mask(grizz.dens.crop, vect(soi.10k.boundary))
+biophys.curmap.soi <- terra::mask(biophys.curmap.crop, vect(soi.10k.boundary))
+hm.dens.soi <- terra::mask(hm.dens.proj, vect(soi.10k.boundary))
+griz.inc.soi <- terra::mask(griz.inc.proj, vect(soi.10k.boundary))
 
-terra::writeRaster(griz.inc.proj, "Data/processed/grizz_inc_SOI_10km.tif", overwrite=TRUE)
-terra::writeRaster(biophys.curmap.crop, "Data/processed/biophys_SOI_10km.tif", overwrite=TRUE)
-terra::writeRaster(grizz.dens.crop, "Data/processed/bhs_SOI_10km.tif", overwrite=TRUE)
-terra::writeRaster(hm.dens.proj, "Data/processed/human_dens_SOI_10km.tif" , overwrite=TRUE)
+terra::writeRaster(griz.inc.proj, "Data/processed/grizz_inc_SOI_crop.tif", overwrite=TRUE)
+terra::writeRaster(biophys.curmap.crop, "Data/processed/biophys_SOI_crop.tif", overwrite=TRUE)
+terra::writeRaster(grizz.dens.crop, "Data/processed/bhs_SOI_crop.tif", overwrite=TRUE)
+terra::writeRaster(hm.dens.proj, "Data/processed/human_dens_SOI_crop.tif" , overwrite=TRUE)
+
+terra::writeRaster(griz.inc.soi, "Data/processed/grizz_inc_SOI_10km.tif", overwrite=TRUE)
+terra::writeRaster(biophys.curmap.soi, "Data/processed/biophys_SOI_10km.tif", overwrite=TRUE)
+terra::writeRaster(grizz.dens.soi, "Data/processed/bhs_SOI_10km.tif", overwrite=TRUE)
+terra::writeRaster(hm.dens.soi, "Data/processed/human_dens_SOI_10km.tif" , overwrite=TRUE)
