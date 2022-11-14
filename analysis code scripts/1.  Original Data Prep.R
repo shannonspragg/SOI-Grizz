@@ -28,6 +28,8 @@ can.ccs.shp<- st_make_valid(st_read("Data/original/lccs000b16a_e.shp"))
 world.hum.dens <- terra::rast("Data/original/gpw_v4_population_density_adjusted_to_2015_unwpp_country_totals_rev11_2020_30_sec.tif")
   # Grizzly Population Units:
 grizz.units <- st_read("Data/original/GBPU_BC_polygon.shp")
+grz.v <- vect(grizz.units)
+
   # Grizz Inc:
 grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the proportion of people within a census that 
 
@@ -35,7 +37,6 @@ grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the prop
 any(!st_is_valid(bc.ecoprovs)) #FALSE
 any(!st_is_valid(can.ccs.shp)) # FALSE
 any(!st_is_valid(grizz.units)) # FALSE
-
 
 ################# We begin by filtering to our SOI ecoprovince, buffering, and cropping our conflict data to the buffered region:
 
@@ -98,7 +99,6 @@ soi.rast <- terra::rasterize(soi.vect.p, grizzinc.crop.t, field = "OBJECTID")
 soi.rast <- resample( soi.rast, grizzinc.crop.t, method='bilinear')
 soi.rast[soi.rast == 327] <- 0
 
-
 # Export as tiff:
 terra::writeRaster(soi.rast, "Data/processed/SOI_10km.tif", overwrite=TRUE)
 
@@ -112,7 +112,6 @@ warp.crop.10k %>% filter(warp.crop.10k$species_name == "BLACK BEAR" | warp.crop.
 
 # Remove Extra Columns: ---------------------------------------------------
   # Let's remove the unwanted columns from our data frame:
-#MW: USING SELECT TO DROP UNWANTED COLUMNS
 warp.crop.10k <- warp.crop.10k %>% 
   dplyr::select(., -c(15:23))
 
@@ -249,7 +248,7 @@ st_write(extant.grizz, "Data/processed/Extant Grizzly Pop Units.shp")
 
 ################################# Prep Human Density Predictor:
 soi.buf.vect <- vect(south.int.10k.buf)
-soi.buf.reproj <- project(soi.buf.vect, world.hum.dens)
+soi.buf.reproj <- terra::project(soi.buf.vect, world.hum.dens)
 world.dens.crop <- crop(world.hum.dens, soi.buf.reproj)
 
 # Save Raster as .tif for later: ----------------------------------------------------

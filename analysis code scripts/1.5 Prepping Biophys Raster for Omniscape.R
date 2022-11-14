@@ -87,7 +87,7 @@ writeRaster(rough.rescale, filename=here("data/processed/roughness_rescale.tif")
 writeRaster(biophys_fuzsum, filename=here("data/processed/biophys_comnined.tif"), overwrite=TRUE)
 
   # Omniscape Inputs:
-writeRaster(grizz.soi, filename=here("data/processed/grizz_dens_crop.tif"), overwrite=TRUE) # source input for omniscape
-writeRaster(biophys.resist.soi, filename=here("data/processed/biophys_resist_soi.tif"), overwrite=TRUE) # resist input for omniscape
+writeRaster(grizz.crop, filename=here("data/processed/grizz_dens_crop.tif"), overwrite=TRUE) # source input for omniscape
+writeRaster(biophys.resist.crop, filename=here("data/processed/biophys_resist_soi.tif"), overwrite=TRUE) # resist input for omniscape
 
 
