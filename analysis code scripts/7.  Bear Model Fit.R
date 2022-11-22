@@ -143,6 +143,17 @@ par(opar)
 
 # We will use full model without quadratic term as their predictive accuracy is similar and the predictor estimates seem more stable
 
+# Correlation plot:
+library(corrplot)
+
+bear.conf.df <- bear.conflict.df[,c(1,3,4,5,6,7,8,9,10,11)]
+res <- cor(bear.conf.df)
+round(res, 2)
+
+corrplot(res, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45, addCoef.col = 'light grey')
+
+
 # Plot Effects of Posterior Coefficients:
 library(bayestestR)
 # install.packages("see")
