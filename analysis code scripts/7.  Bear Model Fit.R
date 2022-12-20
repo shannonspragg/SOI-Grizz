@@ -34,14 +34,17 @@ bear.conflict.df <- bear.conflict %>%
 
 colnames(bear.conflict.df) <- c("conflict", "CCSNAME.ps", "dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "conflictprob")
 
+bear.conflict.df$logpopdens <- log(bear.conflict.df$humandens +1, 10)
+
   # Scale Data:
 bear.conflict.df.scl <- bear.conflict.df %>% 
-  mutate_at(c("dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "conflictprob"), scale) 
+  mutate_at(c("dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "logpopdens", "conflictprob"), scale) 
 
+##MW: Need to think about how to deal with the correlation between conflicprob and all of the predictors used to creat it
 
 # Run Bear Conflict Models: -----------------------------------------------
-t_prior <- student_t(df = 7, location = 0, scale = 1.5)
-int_prior <- normal(location = 0, scale = NULL, autoscale = FALSE)
+t_prior <- student_t(df = 4, location = 0, scale = 0.35)
+int_prior <- normal(location = 0, scale =2, autoscale = FALSE)
 
 SEED<-14124869
 

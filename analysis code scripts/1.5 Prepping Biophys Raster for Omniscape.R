@@ -44,9 +44,11 @@ grizz.crop <- crop(griz.ext, soi_proj.vec)
 hmi.rescale <- hmi.crop / 65536
 
 # Project & Crop Elev:
-elev.proj <- terra::project(elev, griz_proj)
-elev.crop <- crop(elev.proj, soi_proj.vec)
-rough <- terrain(elev.crop, v="TRI")
+soi.proj.elev <- terra::project(soi_proj.vec, elev)
+elev.crop <- crop(elev, soi.proj.elev)
+elev.proj <- terra::project(elev.crop, grizz.crop)
+
+rough <- terrain(elev.proj, v="TRI")
 rough.max <-  global(rough, "max", na.rm=TRUE)[1,]
 rough.min <-  global(rough, "min", na.rm=TRUE)[1,]
 rough.rescale <- (rough - rough.min)/(rough.max - rough.min)
