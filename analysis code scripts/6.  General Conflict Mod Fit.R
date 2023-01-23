@@ -69,7 +69,7 @@ loo1 <- loo(post.pa.full, save_psis = TRUE)
 loo2 <- loo(post.pa.full.quad, save_psis = TRUE)
 loo0 <- loo(post.int.only, save_psis = TRUE)
 
-post_pa_loo_comp <- loo_compare(loo1, loo2, loo0) #quad outperforms (0, -41.8, -3282.2)
+post_pa_loo_comp <- loo_compare(loo1, loo2, loo0) #quad outperforms (0, -45.5, 3238.4)
 
 preds <- posterior_epred(post.pa.full)
 preds2 <- posterior_epred(post.pa.full.quad)
@@ -97,7 +97,7 @@ saveRDS(post_pa_loo_comp, "Data/processed/post_pa_loo_comp.rds")
   # LOO classification accuracy
 round(mean(xor(ploo>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89  # 0.89 0.93 
 round(mean(xor(ploo2>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89 # 0.89, 0.93,
-round(mean(xor(ploo0>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82 # 0.82, 0.82
+round(mean(xor(ploo0>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82 # 0.82, 0.83
 
 # Building plots of results -----------------------------------------------
 
@@ -310,7 +310,7 @@ dist.2pa.plot <- ggplot(data=plot.df) +
 
 p.all <- animal.dens.plot + ground.dens.plot + dist.2met.plot + dist.2pa.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
 
-saveRDS(p.all, "Data/processed/general_conflict_all_pred_plot.rds")
+ggsave(here::here("plots/marg_effects_conflict.png"), p.all)
 
 # Generating raster predictions -------------------------------------------
 library(terra)
@@ -350,7 +350,7 @@ row.crop.dens.scl <- (rowcrop.dens - attributes(pres.abs.scl$ground.crop.dens.ps
 dist.2.pa.pred <- dist.2.pa.scl * fixed.effects[['dist.2.pa.ps']]
 dist.2.met.pred <- dist.2.met.scl * fixed.effects[['dist.2.met.ps']]
 pop.dens.pred <- pop.dens.scl * fixed.effects[['logpopdens']]
-pop.dens.pred2 <- pop.dens.scl * fixed.effects[['I(logpopdens^2)']]
+pop.dens.pred2 <- (pop.dens.scl)^2 * fixed.effects[['I(logpopdens^2)']]
 animal.dens.pred <- animal.dens.scl * fixed.effects[['animal.farm.dens.ps']]
 rowcrop.dens.pred <- row.crop.dens.scl * fixed.effects[['ground.crop.dens.ps']]
 

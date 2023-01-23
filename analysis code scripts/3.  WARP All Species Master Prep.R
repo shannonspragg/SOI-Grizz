@@ -253,7 +253,7 @@ pres.abs.reproj$Ground_Crops <- pres.abs.ground.crop.ext[,2]
 which(is.na(bears.reproj$Animal_Farming))
 which(is.na(bears.reproj$Ground_Crops))
 
-which(is.na(pres.abs.reproj$Animal_Farming)) # We have about 150 NA's
+which(is.na(pres.abs.reproj$Animal_Farming)) # We have about 200 NA's
 which(is.na(pres.abs.reproj$Ground_Crops)) # Same NA's as above
 
 #   # Plot some of our NA's to see if they're outside the boundary:

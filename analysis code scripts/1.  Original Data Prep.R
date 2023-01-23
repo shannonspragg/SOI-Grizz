@@ -96,7 +96,7 @@ soi.vect.p <- terra::project(soi.vect, crs(grizz.inc.rast))
 grizzinc.crop.t <- terra::crop(grizz.inc.rast, soi.vect.p)  
 
 soi.rast <- terra::rasterize(soi.vect.p, grizzinc.crop.t, field = "OBJECTID")
-soi.rast <- resample( soi.rast, grizzinc.crop.t, method='bilinear')
+soi.rast <- terra::resample( soi.rast, grizzinc.crop.t, method='bilinear')
 soi.rast[soi.rast == 327] <- 0
 
 # Export as tiff:
