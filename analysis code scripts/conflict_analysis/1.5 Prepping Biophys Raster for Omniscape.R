@@ -6,11 +6,14 @@ library(here)
 library(terra)
 library(sf)
 library(rgdal)
+library(geodata)
 #library(raster)
 #library("sp")
 library(ggmap)
 library(maptools)
 library(viridis)
+
+
 
 # Bring in Data: ----------------------------------------------------------
 #Creating the raster file objects pulled down from the data folder
@@ -19,10 +22,7 @@ bc_bdry <- st_read("Data/processed/BC CCS.shp")
 griz_dens <- rast(here("Data/original/grizz_dens.tif"))
 hmi <- rast("Data/original/gHMv1_300m_2017_static-0000000000-0000000000.tif")
 
-# Obtain the elevation values for CAN and US, merge them together
-elev.can <- rast(raster::getData('alt', country = 'CAN'))
-elev.us <- rast(raster::getData('alt', country = 'USA')[[1]])
-elev <- mosaic(elev.can, elev.us)
+
 
 
 # Reproject the SOI shapefile boundary
@@ -38,14 +38,24 @@ griz.ext[is.nan(griz.ext)] <- 0
 
 # Project & Crop HMI:
 hmi.crop <- crop(hmi, soi_proj.vec)
+
 grizz.crop <- crop(griz.ext, soi_proj.vec)
+hmi.proj <- project(hmi.crop, grizz.crop)
 
 # Rescale HMI:
-hmi.rescale <- hmi.crop / 65536
+hmi.rescale <- hmi.proj / 65536
+# Obtain the elevation values for CAN and US, merge them together
+lat.long.comb <- expand.grid(data.frame(lon = seq(-125, -110, by=5),
+                            lat = seq(40, 55, by=5)))
+  
+elev <- lapply(1:nrow(lat.long.comb), function(x) elevation_3s(lon=lat.long.comb[x,1], lat.long.comb[x,2], path=tempdir()))
+elev.mos <- do.call(mosaic, elev)
+crs(elev.mos) <- "+proj=longlat +datum=WGS84"
+
 
 # Project & Crop Elev:
-soi.proj.elev <- terra::project(soi_proj.vec, elev)
-elev.crop <- crop(elev, soi.proj.elev)
+soi.proj.elev <- terra::project(soi_proj.vec, elev.mos)
+elev.crop <- crop(elev.mos, soi.proj.elev)
 elev.proj <- terra::project(elev.crop, grizz.crop)
 
 rough <- terrain(elev.proj, v="TRI")

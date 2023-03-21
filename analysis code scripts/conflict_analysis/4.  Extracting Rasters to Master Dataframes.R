@@ -21,7 +21,7 @@ warp.all.sp <- st_read("Data/processed/warp.master.shp")
 pres.abs.master <- st_read("Data/processed/pres.abs.master.shp")
 
   # Predictor Rasters:
-biophys.cum.curmap <- rast("Data/original/cum_currmap.tif") # use this one
+biophys.cum.curmap <- rast("Data/processed/Biophysical_SOI_Revised/cum_currmap.tif") # use this one
   # Cumulative current flow shows the total current for each landscape pixel
   # Normalized shows the degree to which a pixel has more or less current than expected under resistance-free conditions (cumulative current flow divided by flow potential)
 
@@ -32,7 +32,7 @@ grizz.inc.rast <- rast("Data/original/grizz.increase.map.fixed.tif") #  the prop
 
   # BHS layer:
 grizz.dens <- rast("Data/original/grizz_dens.tif") # Estimated grizzly density for the region
-plot(grizz.dens)
+
 
   # SOI Boundary and Raster for template:
 soi.10k.boundary <- st_read("Data/processed/SOI_10km_buf.shp")
@@ -57,28 +57,14 @@ griz.inc.proj <- terra::project(griz.inc.crop, grizz.dens.crop)
 # Here we buffer the WARP and ppres-abs points by 5km before extracting the attributes from the current maps
 warp.all.buf <- warp.all.sp %>% 
   st_buffer(., 5000)
-plot(st_geometry(warp.all.buf)) # Check the buffers
 
 pres.abs.buf <- pres.abs.master %>% 
   st_buffer(., 5000)
-plot(st_geometry(pres.abs.buf)) # Check the buffers
+
 
 # Let's Turn the Buffered Points into a SpatVector:
 warp.sv.buf <- vect(warp.all.buf)
 pres.abs.sv.buf <- vect(pres.abs.buf)
-
-# Plot them together to see if projection truly is same:
-plot(griz.inc.proj)
-plot(warp.sv.buf, add = TRUE) 
-
-plot(grizz.dens.crop)
-plot(warp.sv.buf, add = TRUE) 
-
-plot(biophys.curmap.crop)
-plot(warp.sv.buf, add = TRUE) 
-
-plot(hm.dens.proj)
-plot(pres.abs.sv.buf, add = TRUE) 
 
 
 # Overlay WARP Points with CS Raster  --------------------------------------
@@ -104,17 +90,6 @@ pres.abs.master$GrizzInc <- pres.abs.grizz.inc.b.ext[,2]
 pres.abs.master$BHS <- pres.abs.bhs.b.extract[,2]
 pres.abs.master$Human_Dens <- pres.abs.dens.b.ext[,2] 
 
-# Check for NA's:
-which(is.na(warp.all.sp$Biophys)) #none
-which(is.na(warp.all.sp$BHS)) #none
-which(is.na(warp.all.sp$GrizzInc)) # none
-which(is.na(warp.all.sp$Human_Dens)) 
-
-which(is.na(pres.abs.master$Biophys)) #none
-which(is.na(pres.abs.master$BHS)) #none
-which(is.na(pres.abs.master$GrizzInc)) # none
-which(is.na(pres.abs.master$Human_Dens)) 
-which(is.na(pres.abs.reproj$Human_Dens)) # none
 
 # Save this as new file ---------------------------------------------------
 

@@ -13,10 +13,9 @@ warp.all <-st_read("Data/processed/warp_crop_10km_buf.shp")
 
 # Create a template raster ------------------------------------------------
 
-grizz.dens <- rast("Data/original/grizz_dens.tif")
+grizz.dens <- rast("Data/processed/grizz_dens_crop.tif")
 soi.vect <- terra::project(vect(soi.10k.buf), crs(grizz.dens))
-grizz.crop <- terra::crop(grizz.dens, soi.vect)
-grizz.crop <- terra::mask(grizz.crop, soi.vect)
+grizz.crop <- terra::mask(grizz.dens, soi.vect)
 
 # Make sure our presence points are all species reports: ------------------
  

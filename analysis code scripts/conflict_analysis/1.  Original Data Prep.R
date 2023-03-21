@@ -243,7 +243,7 @@ plot(st_geometry(extant.grizz))
 plot(st_geometry(south.int.10k.buf), add=TRUE)
 
   # Save this for later:
-st_write(extant.grizz, "Data/processed/Extant Grizzly Pop Units.shp") 
+st_write(extant.grizz, "Data/processed/Extant Grizzly Pop Units.shp", append=FALSE) 
 
 
 ################################# Prep Human Density Predictor:
@@ -252,5 +252,5 @@ soi.buf.reproj <- terra::project(soi.buf.vect, world.hum.dens)
 world.dens.crop <- crop(world.hum.dens, soi.buf.reproj)
 
 # Save Raster as .tif for later: ----------------------------------------------------
-terra::writeRaster(world.dens.crop, "Data/processed/human_dens_crop.tif")
+terra::writeRaster(world.dens.crop, "Data/processed/human_dens_crop.tif", overwrite=TRUE)
 

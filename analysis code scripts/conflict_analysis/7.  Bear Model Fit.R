@@ -25,31 +25,28 @@ bear.conflict <- st_read("Data/processed/warp_final.shp") %>%
 
   # Add General Conflict into Bear Data:
 prob.conflict <- rast("Data/processed/prob_conflict_all.tif")
-norm.current <- rast("Data/original/normalized_cum_currmap.tif")
+#cumm.current <- rast("Data/processed/Biophysical_SOI_Revised/cum_currmap.tif")
 bear.prob.conflict <- terra::extract(prob.conflict, vect(bear.conflict), mean, na.rm=TRUE)
-bear.norm.current <- terra::extract(norm.current, vect(bear.conflict), mean, na.rm=TRUE)
+#bear.cumm.current <- terra::extract(cumm.current, vect(bear.conflict), mean, na.rm=TRUE)
 bear.conflict$conflictprob <- bear.prob.conflict[,2]
-bear.conflict$normcurrent <- bear.norm.current[,2]
+#bear.conflict$current <- bear.cumm.current[,2]
 
 bear.conflict.df <- bear.conflict %>% 
   st_drop_geometry() %>% 
-  dplyr::select(., bears, CCSNAME, dst__PA, dst__GP, Anml_Fr, Grnd_Cr, Biophys, GrizzInc, BHS, Human_Dens,conflictprob, normcurrent)
+  dplyr::select(., bears, CCSNAME, dst__PA, dst__GP, Anml_Fr, Grnd_Cr, Biophys, GrizzInc, BHS, Human_Dens,conflictprob)
 
-colnames(bear.conflict.df) <- c("conflict", "CCSNAME.ps", "dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "conflictprob", "normcurrent")
+colnames(bear.conflict.df) <- c("conflict", "CCSNAME.ps", "dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "conflictprob")
 
 bear.conflict.df$logpopdens <- log(bear.conflict.df$humandens +1, 10)
 
   # Scale Data:
 bear.conflict.df.scl <- bear.conflict.df %>% 
-  mutate_at(c("dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "logpopdens", "conflictprob", "normcurrent"), scale) 
-
-##MW: Need to think about how to deal with the correlation between conflicprob and all of the predictors used to creat it
+  mutate_at(c("dist2pa", "dist2grizz", "livestockOps", "rowcropOps", "connectivity", "grizzinc", "habsuit", "humandens", "logpopdens", "conflictprob"), scale) 
 
 # Run Bear Conflict Models: -----------------------------------------------
 t_prior <- student_t(df = 4, location = 0, scale = 0.35)
 int_prior <- normal(location = 0, scale =2, autoscale = FALSE)
 
-SEED<-14124869
 
   # Full Model:
 bear.full.mod <- stan_glmer(conflict ~ dist2pa + dist2grizz + livestockOps + rowcropOps + connectivity + grizzinc + habsuit + logpopdens + conflictprob + (1 | CCSNAME.ps), 
@@ -57,7 +54,7 @@ bear.full.mod <- stan_glmer(conflict ~ dist2pa + dist2grizz + livestockOps + row
                            family = binomial(link = "logit"), # define our binomial glm
                            prior = t_prior, prior_intercept = int_prior, QR=TRUE,
                            iter = 3000, chains=5,
-                           seed = SEED)
+                           seed = 14124869)
 
   # Full Model + Quadratic for GenConf:
 bear.full.mod.quad <- update(bear.full.mod, formula = conflict ~ dist2pa + dist2grizz + livestockOps + rowcropOps  + connectivity + grizzinc + habsuit + logpopdens + conflictprob + I(conflictprob^2) + (1 | CCSNAME.ps), QR=TRUE)
@@ -74,15 +71,13 @@ bear.no.conf <- update(bear.full.mod, formula = conflict ~ dist2pa + dist2grizz 
 bear.int.only <- update(bear.full.mod, formula = conflict ~ (1 | CCSNAME.ps) , QR = FALSE)
 
 saveRDS(bear.full.mod.quad, "Data/processed/bear_quad_reg.rds")
+saveRDS(bear.full.mod.quad2, "Data/processed/bear_quad_reg2.rds")
+saveRDS(bear.full.mod.quad3, "Data/processed/bear_quad_reg3.rds")
+saveRDS(bear.full.mod.quad4, "Data/processed/bear_quad_reg4.rds")
 saveRDS(bear.int.only, "Data/processed/bear_int_only.rds")
 saveRDS(bear.full.mod, "Data/processed/bear_full.rds")
 saveRDS(bear.no.conf, "Data/processed/bear_no_conf.rds")
 
-# Read back in for future use:
-bear.full.mod.quad <- readRDS("Data/processed/bear_quad_reg.rds")
-bear.int.only <- readRDS("Data/processed/bear_int_only.rds")
-bear.full.mod <- readRDS("Data/processed/bear_full.rds")
-bear.no.conf <- readRDS("Data/processed/bear_no_conf.rds")
 
 # Model Comparison: -------------------------------------------------------
 loo1 <- loo(bear.full.mod, save_psis = TRUE)
@@ -120,13 +115,13 @@ pr2 <- as.integer(pred2 >= 0.5)
 pr1 <- as.integer(pred1 >= 0.5)
 pr0 <- as.integer(pred0 >=0.5)
 
-round(mean(xor(pr6,as.integer(bear.conflict.df.scl$conflict==0))),3)
-round(mean(xor(pr5,as.integer(bear.conflict.df.scl$conflict==0))),3)
-round(mean(xor(pr4,as.integer(bear.conflict.df.scl$conflict==0))),3)
-round(mean(xor(pr3,as.integer(bear.conflict.df.scl$conflict==0))),3) #.67 
-round(mean(xor(pr2,as.integer(bear.conflict.df.scl$conflict==0))),3) #.67
-round(mean(xor(pr1,as.integer(bear.conflict.df.scl$conflict==0))),3) #0.67
-round(mean(xor(pr0,as.integer(bear.conflict.df.scl$conflict==0))),3) #0.68
+round(mean(xor(pr6,as.integer(bear.conflict.df.scl$conflict==0))),3) #0.668
+round(mean(xor(pr5,as.integer(bear.conflict.df.scl$conflict==0))),3) #0.672
+round(mean(xor(pr4,as.integer(bear.conflict.df.scl$conflict==0))),3)#0.673
+round(mean(xor(pr3,as.integer(bear.conflict.df.scl$conflict==0))),3) #.672 
+round(mean(xor(pr2,as.integer(bear.conflict.df.scl$conflict==0))),3) #.671
+round(mean(xor(pr1,as.integer(bear.conflict.df.scl$conflict==0))),3) #0.675
+round(mean(xor(pr0,as.integer(bear.conflict.df.scl$conflict==0))),3) #0.676
 
 ploo1 <- E_loo(preds1, loo1$psis_object, type="mean", log_ratios = -log_lik(bear.full.mod))$value
 
@@ -163,16 +158,34 @@ par(opar)
 
 # Plot Effects of Posterior Coefficients:
 library(bayestestR)
-# install.packages("see")
-#install.packages("insight")
+
+
 library(see)
 library(insight)
 library(ggplot2)
 
 bear.quad.result <- p_direction(bear.full.mod.quad4)
-bear.quad.preds.plot <- plot(bear.quad.result, title = "Predictor Effects for Bear Conflict")
-bear.quad.preds.plot
-# this is the max probability of effect (MPE), showing the probability of a predictor having a positive or negative effect
+bear.quad.preds.plot <- plot(bear.quad.result) +
+  scale_y_discrete(labels = c("dist2pa" = "Dist. to PA",
+                              "dist2grizz" = "Dist. to extant grizzly bear \npopulations",
+                              "livestockOps" = "Dens. of livestock ops.",
+                              "rowcropOps" = "Dens. of row-crop ops.",
+                              "I(rowcropOps^2)" = expression("Dens. of row-crop ops."^2),
+                              "connectivity" = "Connectivity",
+                              "grizzinc" = "Perceptions of \ngrizzly bears",
+                              "I(grizzinc^2)" = expression("Perceptions of \ngrizzly bears"^2),
+                              "habsuit" = "Grizzly bear \nhabitat suitability",
+                              "I(habsuit^2)" = expression("Grizzly bear \nhabitat suitability"^2),
+                              "logpopdens" = "log(Human population dens.)",
+                              "I(logpopdens^2)" = expression("log(Human population dens.)"^2),
+                              "conflictprob" = "Prob of wildlife conflict",
+                              "I(conflictprob^2)" = expression("Prob of wildlife conflict"^2))) +
+  ggtitle("Predictor Effects for Bear Conflict")
+
+
+ggsave("plots/bearconf_pd_plot.png", bear.quad.preds.plot)
+
+# this is the maxprobability of effect (MPE), showing the probability of a predictor having a positive or negative effect
 
 
 # Plot results ------------------------------------------------------------
@@ -196,6 +209,8 @@ p <- mcmc_intervals(posterior,
                               "I(logpopdens^2)" = expression("log(Human population dens.)"^2),
                               "conflictprob" = "Prob of wildlife conflict",
                               "I(conflictprob^2)" = expression("Prob of wildlife conflict"^2)))
+
+ggsave("plots/bearconf_CI_plot.png", p)
 
 simdata <- bear.conflict.df.scl %>%
   modelr::data_grid(dist2pa = seq_range(dist2pa, n=300),
@@ -462,7 +477,7 @@ habsuit.plot <- ggplot(data=plot.df) +
   xlab("Predicted Grizzly Bear Habitat Suitability")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
-ggsave("Data/processed/dhabsuit_plot_bearmod.png" ,habsuit.plot )
+ggsave("Data/processed/habsuit_plot_bearmod.png" ,habsuit.plot )
 
 # Plot pop dens:
   simdata <- bear.conflict.df.scl %>%
@@ -497,7 +512,7 @@ humandens.plot <- ggplot(data=plot.df) +
   scale_colour_viridis(discrete = "TRUE", option="D","General Conflict Prob.")+
   scale_fill_viridis(discrete = "TRUE", option="D", "General Conflict Prob.") +
   ylab("Probability of Bear Conflict") + 
-  xlab("Human Population Density")+
+  xlab("log(Human Population Density)")+
          theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
 ggsave("Data/processed/humandens_plot_bearmod.png", humandens.plot)
 
@@ -506,15 +521,16 @@ biophys.p <-  connectivity.plot + habsuit.plot + dist2pa.plot.b + dist2grizz.plo
 
 social.p <- grizzinc.plot + humandens.plot + livestockOps.plot.b + rowcropOps.plot.b + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
 
-plot.all <- connectivity.plot + habsuit.plot + dist2pa.plot.b + dist2grizz.plot + grizzinc.plot + humandens.plot + livestockOps.plot.b + rowcropOps.plot.b + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
+plot.all <- connectivity.plot + habsuit.plot + dist2pa.plot.b + dist2grizz.plot + grizzinc.plot + humandens.plot + livestockOps.plot.b + rowcropOps.plot.b + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect') &
+  theme(legend.position='bottom', axis.title = element_text(size=10))
 
-ggsave("Data/processed/biophys_bear_conf_plots.png", biophys.p)
-ggsave("Data/processed/social_bear_conf_plots.png", social.p)
-ggsave("Data/processed/bear_conf_plots.png" , plot.all)
+ggsave("plots/biophys_bear_conf_plots.png", biophys.p)
+ggsave("plots/social_bear_conf_plots.png", social.p)
+ggsave("plots/bear_conf_plots.png" , plot.all, width = 10.25, height = 7.25)
 
 # generate spatial pred ---------------------------------------------------
 fixed.effects <- fixef(bear.full.mod.quad4)
-var.int <- ranef(bear.full.mod.quad)$CCSNAME.ps %>% tibble::rownames_to_column(., "CCSNAME")
+var.int <- ranef(bear.full.mod.quad4)$CCSNAME.ps %>% tibble::rownames_to_column(., "CCSNAME")
 
 
 ccs.sf <- st_read("Data/processed/SOI_CCS_10km.shp")
@@ -537,8 +553,8 @@ pop.d.crop <- crop(pop.dens, animal.dens)
 pop.dens <- mask(pop.d.crop, animal.dens)
 bhs <- crop(bhs, animal.dens)
 grizinc <- crop(grizinc, animal.dens)
-writeRaster(bhs, "Data/processed/habsuit_SOI_10km.tif", overwrite=TRUE)
-writeRaster(grizinc, "Data/processed/grizinc_SOI_10km.tif", overwrite=TRUE)
+#writeRaster(bhs, "Data/processed/habsuit_SOI_10km.tif", overwrite=TRUE)
+#writeRaster(grizinc, "Data/processed/grizinc_SOI_10km.tif", overwrite=TRUE)
 
 #Create global intercept raster
 global.int <- dist.2.pa
@@ -584,8 +600,8 @@ conflict.pred <- conflict.scl * fixed.effects[['conflictprob']]
 conflict.quad.prd <- (conflict.scl)^2 * fixed.effects[['I(conflictprob^2)']]
 
   # Add our Rasters:
-pred.stack <- c(dist2pa.pred, grizz.dist.pred, animal.dens.pred, rowcrop.dens.pred, rowcrop.dens.quad.pred, biophys.pred, grizzinc.pred, grizzinc.quad.pred, bhs.pred, bhs.quad.pred, pop.dens.pred, pop.dens.quad.pred,      conflict.pred, conflict.quad.prd)
+pred.stack <- c(global.int, ccs.int, dist2pa.pred, grizz.dist.pred, animal.dens.pred, rowcrop.dens.pred, rowcrop.dens.quad.pred, biophys.pred, grizzinc.pred, grizzinc.quad.pred, bhs.pred, bhs.quad.pred, pop.dens.pred, pop.dens.quad.pred,      conflict.pred, conflict.quad.prd)
 
 linpred.rst <- sum(pred.stack)
 prob.rast <- (exp(linpred.rst))/(1 + exp(linpred.rst))
-writeRaster(prob.rast, "Data/processed/prob_conflict_bear.tif")
+writeRaster(prob.rast, "Data/processed/prob_conflict_bear.tif", overwrite=TRUE)

@@ -18,7 +18,7 @@ library(patchwork)
 library(modelr)
 bayesplot_theme_set(bayesplot::theme_default(base_family = "sans"))
 
-
+set.seed(14124869)
 # Bring in Data: ----------------------------------------------------------
 warp.pres.abs <- st_read(here::here("./Data/processed/pres_abs_final.shp")) %>% st_drop_geometry()
 
@@ -40,14 +40,14 @@ pres.abs.scl <- pres.abs.filter %>%
 
 # Run General Conflict Models: --------------------------------------------
 t_prior <- student_t(df = 4, location = 0, scale = 0.35)
-SEED<-14124869
+
   # Full Model:
 post.pa.full <- stan_glmer(conflict_presence_ps ~ dist.2.pa.ps + dist.2.met.ps + animal.farm.dens.ps + ground.crop.dens.ps + logpopdens + (1 | CCSNAME.ps), 
                            data = pres.abs.scl,
                            family = binomial(link = "logit"), # define our binomial glm
                            prior = t_prior, prior_intercept = normal(0,2), QR=TRUE,
                            iter = 3000, chains=5,
-                           seed = SEED) # we add seed for reproducibility
+                           seed = 14124869) # we add seed for reproducibility
 
 
   # Full Model + Quadratic for Pop Dens:
@@ -56,20 +56,18 @@ post.pa.full.quad <- update(post.pa.full, formula = conflict_presence_ps ~ dist.
   # Intercept-only model:
 post.int.only <-  update(post.pa.full, formula = conflict_presence_ps ~ 1+ (1 | CCSNAME.ps), QR = FALSE, iter=5000)
 
+saveRDS(pres.abs.filter, "Data/processed/fullconf_presabs_filter.rds")
 saveRDS(post.pa.full, "Data/processed/post_pa_full.rds")
 saveRDS(post.pa.full.quad, "Data/processed/post_pa_full_quad.rds")
 saveRDS(post.int.only, "Data/processed/post_int_only.rds")
 
-post.pa.full <- readRDS("Data/processed/post_pa_full.rds")
-post.pa.full.quad <- readRDS("Data/processed/post_pa_full_quad.rds")
-post.int.only <- readRDS("Data/processed/post_int_only.rds")
 
 # Run LOOIC and Posterior Comparisons: ------------------------------------
 loo1 <- loo(post.pa.full, save_psis = TRUE)
 loo2 <- loo(post.pa.full.quad, save_psis = TRUE)
 loo0 <- loo(post.int.only, save_psis = TRUE)
 
-post_pa_loo_comp <- loo_compare(loo1, loo2, loo0) #quad outperforms (0, -45.5, 3238.4)
+post_pa_loo_comp <- loo_compare(loo1, loo2, loo0) #quad outperforms (0, -34, 3284.4)
 
 preds <- posterior_epred(post.pa.full)
 preds2 <- posterior_epred(post.pa.full.quad)
@@ -80,9 +78,9 @@ pred0 <- colMeans(preds0)
 pr <- as.integer(pred >= 0.5)
 pr2 <- as.integer(pred2 >= 0.5)
 pr0 <- as.integer(pred0 >=0.5)
-round(mean(xor(pr,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89  # 0.89 0.93
-round(mean(xor(pr2,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.88 # 0.89 0.93
-round(mean(xor(pr0,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82 # 0.82 0.82
+round(mean(xor(pr,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.93
+round(mean(xor(pr2,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.93
+round(mean(xor(pr0,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) # 0.83
 
 ploo=E_loo(preds, loo1$psis_object, type="mean", log_ratios = -log_lik(post.pa.full))$value
 ploo2 <- E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(post.pa.full.quad))$value
@@ -95,9 +93,9 @@ saveRDS(loo0, "Data/processed/post_int_only_loo.rds")
 saveRDS(post_pa_loo_comp, "Data/processed/post_pa_loo_comp.rds")
 
   # LOO classification accuracy
-round(mean(xor(ploo>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89  # 0.89 0.93 
-round(mean(xor(ploo2>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.89 # 0.89, 0.93,
-round(mean(xor(ploo0>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82 # 0.82, 0.83
+round(mean(xor(ploo>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.93 
+round(mean(xor(ploo2>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.93,
+round(mean(xor(ploo0>0.5,as.integer(pres.abs.scl$conflict_presence_ps==0))),2) #0.82
 
 # Building plots of results -----------------------------------------------
 
@@ -116,24 +114,25 @@ par(opar)
 
   # Plot Effects of Posterior Coefficients:
 library(bayestestR)
-# install.packages("see")
-#install.packages("insight")
 library(see)
 library(insight)
 library(ggplot2)
 
 post.pa.result <- p_direction(post.pa.full.quad)
-post.pa.full.preds.plot <- plot(post.pa.result, title = "Predictor Effects for General Wildlife Conflict")
+post.pa.full.preds.plot <- plot(post.pa.result) +
+  scale_y_discrete(labels = c("dist.2.pa.ps" = "Dist. to PA",
+                              "dist.2.met.ps" = "Dist. to metro",
+                              "animal.farm.dens.ps" = "Dens. of livestock ops.",
+                              "ground.crop.dens.ps" = "Dens. of row-crop ops.",
+                              "logpopdens" = "log(Population dens.)",
+                              "I(logpopdens^2)" = "log(Population dens.)^2")) +
+  ggtitle("Predictor Effects for General Wildlife Conflict")
+
   # this is the max probability of effect (MPE), showing the probability of a predictor having a positive or negative effect
 
-gen_conf_coef_plot <- plot(post.pa.full.quad, pars = c("dist.2.pa.ps","dist.2.met.ps",
-                            "animal.farm.dens.ps",
-                            "ground.crop.dens.ps",
-                            "logpopdens", "I(logpopdens^2)")) + 
-  ggtitle( "Predictor Effects for General Wildlife Conflict")
 
-saveRDS(post.pa.full.preds.plot, "Data/processed/post_pa_full_predsplot.rds")
-saveRDS(gen_conf_coef_plot, "Data/processed/post_pa_coef_plot.rds")
+ggsave("plots/allconf_pd_plot.png", post.pa.full.preds.plot)
+
 
 # Simulate Data & Posterior Predictive Draws: -----------------------------
 
@@ -145,15 +144,15 @@ p <- mcmc_intervals(posterior,
                     "ground.crop.dens.ps",
                     "logpopdens",
                     "I(logpopdens^2)"),
-           prob = 0.8) +
+           prob = 0.89) +
   scale_y_discrete(labels = c("dist.2.pa.ps" = "Dist. to PA",
                               "dist.2.met.ps" = "Dist. to metro",
                               "animal.farm.dens.ps" = "Dens. of livestock ops.",
                               "ground.crop.dens.ps" = "Dens. of row-crop ops.",
-                              "pop.dens" = "log(Population dens.)",
+                              "logpopdens" = "log(Population dens.)",
                               "I(logpopdens^2)" = "log(Population dens.)^2")) 
 
-
+ggsave("plots/allconf_CI_plot.png", p)
 
 simdata <- pres.abs.scl %>%
   modelr::data_grid(dist.2.pa.ps = mean(dist.2.pa.ps),
@@ -192,7 +191,7 @@ animal.dens.plot <- ggplot(data=plot.df) +
   xlab(expression("Density of Livestock Operations per"~km^{2}))+
  # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
-
+ggsave("plots/allconf_animaldens_me.png", animal.dens.plot)
 ###### Testing other color palette:
 # library(RColorBrewer)
 # display.brewer.all(colorblindFriendly = TRUE)
@@ -240,7 +239,7 @@ ground.dens.plot <- ggplot(data=plot.df) +
   xlab(expression("Density of Row-Crop Operations per"~km^{2}))+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
-
+ggsave("plots/allconf_rowcrop_me.png", ground.dens.plot)
 
 simdata <- pres.abs.scl %>%
   modelr::data_grid(dist.2.pa.ps = mean(dist.2.pa.ps),
@@ -274,6 +273,7 @@ dist.2met.plot <- ggplot(data=plot.df) +
   xlab("Distance to Metro Areas (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
+ggsave("plots/allconf_dist2met_me.png", dist.2met.plot)
 
 simdata <- pres.abs.scl %>%
   modelr::data_grid(dist.2.pa.ps = seq_range(dist.2.pa.ps, n=300),
@@ -307,10 +307,10 @@ dist.2pa.plot <- ggplot(data=plot.df) +
   xlab("Distance to Protected Area (km)")+
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
-
+ggsave("plots/allconf_dist2pa_me.png", dist.2pa.plot)
 p.all <- animal.dens.plot + ground.dens.plot + dist.2met.plot + dist.2pa.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
 
-ggsave(here::here("plots/marg_effects_conflict.png"), p.all)
+ggsave(here::here("plots/allconf_allpreds_me.png"), p.all)
 
 # Generating raster predictions -------------------------------------------
 library(terra)
@@ -330,7 +330,7 @@ rowcrop.dens <- rast("Data/processed/ground_crop_density_cropped.tif")
 
 pop.d.crop <- crop(logpopdens, animal.dens)
 logpopdens <- mask(pop.d.crop, animal.dens)
-writeRaster(logpopdens, "Data/processed/pop_dens_SOI_10km.tif")
+writeRaster(logpopdens, "Data/processed/pop_dens_SOI_10km.tif", overwrite=TRUE)
 
   # Create global intercept raster
 global.int <- dist.2.met
@@ -360,7 +360,7 @@ linpred.rast <- sum(pred.stack)
 prob.rast <- (exp(linpred.rast))/(1 + exp(linpred.rast))
 
   # Save these:
-writeRaster(prob.rast, "Data/processed/prob_conflict_all.tif")
+writeRaster(prob.rast, "Data/processed/prob_conflict_all.tif", overwrite=TRUE)
 # saveRDS(post.int.only, "Data/processed/int_only_reg.rds")
 # saveRDS(post.pa.full, "Data/processed/full_mod_reg.rds")
 # saveRDS(post.pa.full.quad, "Data/processed/full_mod_quad.rds")

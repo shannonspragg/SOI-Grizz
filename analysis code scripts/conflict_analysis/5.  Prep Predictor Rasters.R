@@ -86,8 +86,8 @@ ground.crop.crop <- mask(ground.crop.crop, vect(soi.10k.boundary))
 combined.crop <- animal.prod.crop + ground.crop.crop
 
 terra::writeRaster(dist.pa.crop, "Data/processed/dist2pa_SOI_10km.tif", overwrite=TRUE)
-terra::writeRaster(dist.met.crop, "Data/processed/dist2metro_SOI_10km.tif" )
+terra::writeRaster(dist.met.crop, "Data/processed/dist2metro_SOI_10km.tif", overwrite=TRUE )
 terra::writeRaster(dist.griz.pop.crop, "Data/processed/dist2grizz_pop_raster.tif", overwrite=TRUE)
-terra::writeRaster(animal.prod.crop, "Data/processed/animal_production_density_cropped.tif")
-terra::writeRaster(ground.crop.crop, "Data/processed/ground_crop_density_cropped.tif" )
-terra::writeRaster(combined.crop, "Data/processed/combined_farm_density_cropped.tif" )
+terra::writeRaster(animal.prod.crop, "Data/processed/animal_production_density_cropped.tif", overwrite=TRUE)
+terra::writeRaster(ground.crop.crop, "Data/processed/ground_crop_density_cropped.tif",  overwrite=TRUE )
+terra::writeRaster(combined.crop, "Data/processed/combined_farm_density_cropped.tif",  overwrite=TRUE )
