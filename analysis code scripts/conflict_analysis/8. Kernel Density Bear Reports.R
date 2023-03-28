@@ -34,8 +34,8 @@ grizz.bears <- warp.crop.10km %>%
 head(black.bears)
 head(grizz.bears)
 
-b.bears.rast <- raster(black.bears)
-g.bears.rast <- raster(grizz.bears)
+#b.bears.rast <- raster(black.bears)
+#g.bears.rast <- raster(grizz.bears)
 
 # Format all Data: --------------------------------------------------------
   # First, our boundary shapefile:
@@ -47,19 +47,19 @@ w.km <- rescale(w, 1000)
 sw <- black.bears
 bb.pts <- as.ppp(sw)
 marks(bb.pts) <- NULL
-bb.pts <- rescale(bb.pts, 1000)
+#bb.pts <- rescale(bb.pts, 1000)
 Window(bb.pts) <- w
 
   # Lastly, our grizzly bears points shapefile:
 gw <- grizz.bears
 gb.pts <- as.ppp(gw)
 marks(gb.pts) <- NULL
-gb.pts <- rescale(gb.pts, 1000)
+#gb.pts <- rescale(gb.pts, 1000)
 Window(gb.pts) <- w
 
 # Visualize our Data Points -----------------------------------------------
   # Plot the points and boundary:
-plot(bb.pts, main=NULL, cols=rgb(0,0,0,.2), pch=20)
+plot(gb.pts, main=NULL, cols=rgb(0,0,0,.2), pch=20)
 
 
 # Density Based Analysis - Quadrat Density: -------------------------------
@@ -86,7 +86,7 @@ contour(K1.bb, add=TRUE)
 title("Black Bear KDE for Southern Interior") 
 
   # Do this with a 50km bandwidth:
-K2.bb <- density(bb.pts, sigma=50) # Using a 50km bandwidth
+K2.bb <- density(bb.pts, bw="SJ") # Using a 50km bandwidth
 plot(K2.bb, main=NULL, las=1)
 contour(K2.bb, add=TRUE)
 title("Black Bear KDE w/ 50km Bandwith for Southern Interior") 
@@ -119,7 +119,7 @@ contour(K1.gb, add=TRUE)
 title("Grizzly Bear KDE for Southern Interior") # Add points
 
   # Do this with a 50km bandwidth:
-K2.gb <- density(gb.pts, sigma=50) # Using a 50km bandwidth
+K2.gb <- density(gb.pts, bw="SJ", sigma=2) # Using a 50km bandwidth
 plot(K2.gb, main=NULL, las=1)
 contour(K2.gb, add=TRUE)
 title("Grizzly Bear KDE w/ 50km Bandwidth for Southern Interior") 
@@ -131,11 +131,23 @@ contour(K3.gb, add=TRUE)
 title("Grizzly Bear KDE w/ 50km Bandwidth for Southern Interior") 
 
 
+
+density_rep <- function(pts1, pts2, adj){
+  dens1 <- density(pts1,  adjust=adj)
+  dens2 <- density(pts2,  adjust=adj)
+  rast1 <- rast(dens1)
+  rast2 <- rast(dens2)
+  corrast <- rasterCorrelation(rast1, rast2, type = "pearson")
+}
+
+cors <- lapply(c(0.25, 0.5, 1, 2, 4), function(x) density_rep(bb.pts, gb.pts, adj=x))
+cor.stack <- rast(cors)
+cor.stack.recl <- terra::ifel(cor.stack > 0.7, 1, 0)
 # Make these into rasters: ------------------------------------------------
-K1.bb.raster <- raster(K1.bb)
-K2.bb.raster <- raster(K2.bb)
-K1.gb.raster <- raster(K1.gb)
-K2.gb.raster <- raster(K2.gb)
+K1.bb.raster <- rast(K1.bb)
+K2.bb.raster <- rast(K2.bb)
+K1.gb.raster <- rast(K1.gb)
+K2.gb.raster <- rast(K2.gb)
 
 
 # Calculate the Correlation: ----------------------------------------------
@@ -161,14 +173,14 @@ title("Grizzly & Black Bear KDE Correlation for Southern Interior")
 
 # Plotting the Correlation: -----------------------------------------------
   # Assign Projection to Rasters:
-crs(bears.kde.corr) <- CRS('+init=EPSG:3153')
+crs(cor.stack) <- CRS('+init=EPSG:3153')
 
 
   # Reproject the vector data:
 b.bears.reproj <- st_make_valid(black.bears) %>% 
-  st_transform(crs=crs(bears.kde.corr))
+  st_transform(crs=crs(cor.stack[[3]]))
 g.bears.reproj <- st_make_valid(grizz.bears) %>% 
-  st_transform(crs=crs(bears.kde.corr))
+  st_transform(crs=crs(cor.stack[[3]]))
 
   # Make these spatvectors & rasters:
 g.bears.vect <- vect(g.bears.reproj)
@@ -180,16 +192,17 @@ bears.kde.corr.sr <- as(bears.kde.corr, "SpatRaster")
 ext(bears.kde.corr.sr) <- ext(b.bears.vect) 
 
   # Plot all together:
-plot(bears.kde.corr.sr)
+png(file = "plots/KDE_update.png", bg = "transparent")
+plot(cor.stack[[3]])
 plot(b.bears.vect, pch=2, col = "red", add=TRUE) #this works...
 plot(g.bears.vect, pch=19, col = "black",add=TRUE)
 title("Grizzly & Black Bear KDE Correlation for Southern Interior") 
 legend("topright",   # set position
-       inset = 0.05, # Distance from the margin as a fraction of the plot region
+       inset = c(0.025, 0.125), # Distance from the margin as a fraction of the plot region
        legend = c("Black Bears", "Grizzly Bears"),
        pch = c(2, 19),
        col = c("red","black"))
-
+dev.off()
 
 # Write as .tif files: ----------------------------------------------------
 raster::writeRaster(K1.bb.raster, "Data/processed/black_bear_kde.tif")
