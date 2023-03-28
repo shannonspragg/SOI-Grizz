@@ -308,9 +308,10 @@ dist.2pa.plot <- ggplot(data=plot.df) +
   # guides(fill=guide_legend(title="Population Density"))+
   theme(text=element_text(size=12,  family="Times New Roman"), legend.text = element_text(size=10),panel.background = element_rect(fill = "white", colour = "grey50"))
 ggsave("plots/allconf_dist2pa_me.png", dist.2pa.plot)
-p.all <- animal.dens.plot + ground.dens.plot + dist.2met.plot + dist.2pa.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect')
+p.all <- animal.dens.plot + ground.dens.plot + dist.2met.plot + dist.2pa.plot + plot_annotation(tag_levels = 'a', tag_suffix = ")") +  plot_layout(guides = 'collect') &
+  theme(legend.position='bottom', axis.title = element_text(size=10))
 
-ggsave(here::here("plots/allconf_allpreds_me.png"), p.all)
+ggsave("plots/allconf_allpreds_me.png", p.all, width = 10.25, height = 7.25)
 
 # Generating raster predictions -------------------------------------------
 library(terra)
